@@ -86,8 +86,11 @@ async fn main() {
         Commands::DownloadPythonTasks { path } => {
             swimlane_client.download_python_tasks(&path).await.unwrap();
         }
-        Commands::UploadRequirements { path: _ } => {
-            todo!();
+        Commands::UploadRequirements { path } => {
+            swimlane_client
+                .upload_python_requirements(&path)
+                .await
+                .unwrap();
         }
         Commands::Migrate {
             migration_type,
