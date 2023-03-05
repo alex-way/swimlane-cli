@@ -4,26 +4,24 @@ permissions:
   contents: "write"
 
 on:
-  workflow_run:
-    workflows: ["Tag"]
-    types:
-      - completed
+  push:
+    tags:
+      - v[0-9]+.*
 
 jobs:
   get-tag:
     name: Get Tag From Package Version
     runs-on: ubuntu-latest
     outputs:
-      pkg-version: ${{ steps.pkg-version.outputs.PKG_VERSION }}
+      tag: ${{ steps.get-tag.outputs.TAG }}
     steps:
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get tag
-        id: pkg-version
+        id: get-tag
         shell: bash
-        run: |
-          echo PKG_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/["]/, "", $2); printf("%s",$2) }' Cargo.toml) >> $GITHUB_OUTPUT
+        run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
   create-release:
     name: Create release
@@ -39,7 +37,7 @@ jobs:
           # (optional) Path to changelog.
           # changelog: CHANGELOG.md
           branch: main
-          ref: refs/tags/v${{ needs.get-tag.outputs.pkg-version }}
+          ref: refs/tags/${{ needs.get-tag.outputs.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
   upload-assets:
@@ -58,5 +56,5 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: swimlane-cli
-          ref: refs/tags/v${{ needs.get-tag.outputs.pkg-version }}
+          ref: refs/tags/${{ needs.get-tag.outputs.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
