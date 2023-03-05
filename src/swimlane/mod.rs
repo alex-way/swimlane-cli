@@ -269,11 +269,37 @@ impl SwimlaneClient {
         &self,
         path: &impl AsRef<Path>,
     ) -> Result<(), reqwest::Error> {
-        let applications = self.get_applications_light().await?;
+        // Create the path if it doesnt exist
+        if !path.as_ref().exists() {
+            std::fs::create_dir(&path)
+                .expect(format!("Could not create path: '{}'", &path.as_ref().display()).as_str());
+        }
+
+        let applications = self
+            .get_applications_light()
+            .await
+            .expect("Could not get applications");
+
+        let mut handles = vec![];
 
         for application in applications {
-            self.download_tasks_for_application(&application, path)
-                .await?;
+            // todo: remove requirement for cloning
+            let sw = self.clone();
+            let path = path.clone().as_ref().to_path_buf();
+            let handle = tokio::spawn(async move {
+                sw.download_tasks_for_application(&application, &path).await
+            });
+            handles.push(handle);
+        }
+
+        let common_path = path.clone().as_ref().to_path_buf();
+        let sw = self.clone();
+        handles.push(tokio::spawn(async move {
+            sw.download_common_tasks(&common_path).await
+        }));
+
+        for handle in handles {
+            handle.await.unwrap().unwrap();
         }
 
         Ok(())

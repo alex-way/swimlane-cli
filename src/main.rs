@@ -39,47 +39,7 @@ async fn main() {
 
     match args.command {
         Commands::DownloadPythonTasks { path } => {
-            // Create the path if it doesnt exist
-            if !path.exists() {
-                std::fs::create_dir(&path)
-                    .expect(format!("Could not create path: '{}'", path.display()).as_str());
-            }
-
-            let applications = swimlane_client
-                .get_applications_light()
-                .await
-                .expect("Could not get applications");
-
-            let mut handles = vec![];
-
-            for application in applications {
-                // todo: remove requirement for cloning
-                let sw = swimlane_client.clone();
-                let path = path.clone();
-                let handle = tokio::spawn(async move {
-                    println!("Downloading tasks for application: '{}'", application.name);
-                    sw.download_tasks_for_application(&application, &path)
-                        .await
-                        .unwrap();
-                    println!(
-                        "Finished downloading tasks for application: '{}'",
-                        application.name
-                    );
-                });
-                handles.push(handle);
-            }
-
-            // todo: Download common tasks to /common folder
-
-            handles.push(tokio::spawn(async move {
-                println!("Downloading common tasks");
-                swimlane_client.download_common_tasks(&path).await.unwrap();
-                println!("Finished downloading common tasks");
-            }));
-
-            for handle in handles {
-                handle.await.unwrap();
-            }
+            swimlane_client.download_python_tasks(&path).await.unwrap();
         }
     }
 }
