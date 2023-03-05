@@ -6,8 +6,9 @@ permissions:
 on:
   workflow_run:
     workflows: ["Continuous integration"]
-    tags:
-      - swimlane-cli@*
+    # https://github.com/actions/starter-workflows/issues/1137
+    # tags:
+    #   - swimlane-cli@*
     types:
       - completed
 
