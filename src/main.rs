@@ -43,8 +43,31 @@ async fn main() {
             if !path.exists() {
                 std::fs::create_dir(&path).expect("Could not create directory");
             }
+            let applications = swimlane_client
+                .get_applications_light()
+                .await
+                .expect("Could not get applications");
 
-            swimlane_client.download_python_tasks(&path).await.unwrap();
+            let mut handles = vec![];
+
+            for application in applications {
+                // todo: remove requirement for cloning here
+                let sw = swimlane_client.clone();
+                let path = path.clone();
+                // todo: directly spawn download tasks for application
+                let handle = tokio::spawn(async move {
+                    sw.download_tasks_for_application(&application, &path).await
+                });
+                handles.push(handle);
+            }
+
+            for handle in handles {
+                // todo: deduplicate expect
+                handle
+                    .await
+                    .expect("Could not download tasks")
+                    .expect("Could not download tasks");
+            }
         }
     }
 }

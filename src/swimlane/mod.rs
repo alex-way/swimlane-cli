@@ -1,7 +1,11 @@
 use reqwest::{header::HeaderMap, Client, ClientBuilder};
 use serde::{Deserialize, Serialize};
+use std::fs::create_dir;
 use std::path::Path;
+use tokio::fs::File;
+use tokio::io::{self, AsyncWriteExt};
 
+#[derive(Clone)]
 pub struct SwimlaneClient {
     http_client: Client,
     base_url: String,
@@ -162,23 +166,50 @@ impl SwimlaneClient {
         let tasks = self.get_tasks_for_application(&application.id).await?;
         let folder = path.as_ref().join(&application.name);
         if !folder.exists() && tasks.iter().any(|t| t.action.script.is_some()) {
-            std::fs::create_dir(&folder).expect("Could not create folder");
+            create_dir(&folder)
+                .expect(format!("Could not create folder: '{}'", folder.display()).as_str());
         }
 
+        let tasks = tasks
+            .into_iter()
+            .filter(|t| t.action.script.is_some())
+            .collect::<Vec<_>>();
+
+        let mut handles = vec![];
+
         for task in tasks {
-            self.save_task(&task, &folder);
+            let folder = folder.clone();
+            let client = self.clone();
+            let handle = tokio::spawn(async move {
+                client
+                    .save_task(&task, &folder)
+                    .await
+                    .expect(format!("Could not save task: '{}'", task.name).as_str());
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
         }
 
         Ok(())
     }
 
-    fn save_task(&self, task: &Task, path: &impl AsRef<Path>) {
+    async fn save_task(&self, task: &Task, path: &impl AsRef<Path>) -> io::Result<()> {
         match &task.action.script {
             Some(script) => {
                 let file_path = path.as_ref().join(format!("{}.py", task.name));
-                std::fs::write(file_path, script).expect("Could not write file");
+                let mut file = File::create(&file_path).await?;
+                file.write_all(script.as_bytes()).await.expect(
+                    format!("Could not write to file: '{}'", &file_path.display()).as_str(),
+                );
+                Ok(())
             }
-            None => {}
+            None => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("Task '{}' has no script", task.name),
+            )),
         }
     }
 
