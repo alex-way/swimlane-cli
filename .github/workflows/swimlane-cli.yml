@@ -67,7 +67,7 @@ jobs:
           # changelog: CHANGELOG.md
           branch: main
           prefix: swimlane-cli@
-          ref: $TAG
+          ref: ${{ github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
   upload-assets:
