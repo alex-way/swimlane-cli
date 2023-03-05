@@ -84,5 +84,5 @@ jobs:
         with:
           bin: swimlane-cli
           prefix: swimlane-cli@
-          ref: ${{ github.ref }}
+          ref: ${{ replace(github.ref, 'swimlane-cli@', '') }}
           token: ${{ secrets.GITHUB_TOKEN }}
