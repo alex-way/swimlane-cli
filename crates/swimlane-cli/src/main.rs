@@ -1,8 +1,6 @@
-use crate::swimlane::SwimlaneClient;
 use clap::{arg, Parser, Subcommand};
 use std::path::PathBuf;
-
-pub mod swimlane;
+use swimlane::SwimlaneClient;
 
 /// A fictional versioning CLI
 #[derive(Debug, Parser)]
