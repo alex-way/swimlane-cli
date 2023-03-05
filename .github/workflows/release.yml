@@ -6,8 +6,8 @@ permissions:
 on:
   workflow_run:
     workflows: ["Continuous integration"]
-    branches:
-      - main
+    tags:
+      - swimlane-cli@*
     types:
       - completed
 
