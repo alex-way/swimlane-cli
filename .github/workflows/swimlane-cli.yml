@@ -58,13 +58,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Set tag
+        run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Create release
         uses: taiki-e/create-gh-release-action@v1
         with:
           # (optional) Path to changelog.
           # changelog: CHANGELOG.md
           branch: main
-          ref: ${{ github.ref }}
+          prefix: swimlane-cli@
+          ref: $TAG
           token: ${{ secrets.GITHUB_TOKEN }}
 
   upload-assets:
@@ -85,6 +88,5 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: swimlane-cli
-          prefix: swimlane-cli@
-          ref: $TAG
+          ref: ${{ github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
