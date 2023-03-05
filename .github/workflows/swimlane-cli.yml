@@ -46,3 +46,53 @@ jobs:
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy -- -D warnings
+
+  get-tag:
+    name: Get Tag From Package Version
+    if: ${{ startsWith(github.ref, 'refs/tags/swimlane-cli') }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get-tag.outputs.TAG }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get tag
+        id: get-tag
+        run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+  create-release:
+    name: Create release
+    if: ${{ startsWith(github.ref, 'refs/tags/swimlane-cli') }}
+    needs:
+      - get-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Create release"
+        uses: "taiki-e/create-gh-release-action@v1"
+        with:
+          # (optional) Path to changelog.
+          # changelog: CHANGELOG.md
+          branch: main
+          ref: refs/tags/${{ needs.get-tag.outputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-assets:
+    name: Upload assets to Github releases
+    if: ${{ startsWith(github.ref, 'refs/tags/swimlane-cli') }}
+    needs:
+      - create-release
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: swimlane-cli
+          ref: refs/tags/${{ needs.get-tag.outputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
