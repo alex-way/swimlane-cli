@@ -41,8 +41,10 @@ async fn main() {
         Commands::DownloadPythonTasks { path } => {
             // Create the path if it doesnt exist
             if !path.exists() {
-                std::fs::create_dir(&path).expect("Could not create directory");
+                std::fs::create_dir(&path)
+                    .expect(format!("Could not create path: '{}'", path.display()).as_str());
             }
+
             let applications = swimlane_client
                 .get_applications_light()
                 .await
@@ -51,22 +53,32 @@ async fn main() {
             let mut handles = vec![];
 
             for application in applications {
-                // todo: remove requirement for cloning here
+                // todo: remove requirement for cloning
                 let sw = swimlane_client.clone();
                 let path = path.clone();
-                // todo: directly spawn download tasks for application
                 let handle = tokio::spawn(async move {
-                    sw.download_tasks_for_application(&application, &path).await
+                    println!("Downloading tasks for application: '{}'", application.name);
+                    sw.download_tasks_for_application(&application, &path)
+                        .await
+                        .unwrap();
+                    println!(
+                        "Finished downloading tasks for application: '{}'",
+                        application.name
+                    );
                 });
                 handles.push(handle);
             }
 
+            // todo: Download common tasks to /common folder
+
+            handles.push(tokio::spawn(async move {
+                println!("Downloading common tasks");
+                swimlane_client.download_common_tasks(&path).await.unwrap();
+                println!("Finished downloading common tasks");
+            }));
+
             for handle in handles {
-                // todo: deduplicate expect
-                handle
-                    .await
-                    .expect("Could not download tasks")
-                    .expect("Could not download tasks");
+                handle.await.unwrap();
             }
         }
     }

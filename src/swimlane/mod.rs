@@ -13,79 +13,79 @@ pub struct SwimlaneClient {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User {
-    #[serde(rename = "firstName")]
-    first_name: String,
-    #[serde(rename = "lastName")]
-    last_name: String,
-    email: String,
+    pub id: String,
     #[serde(rename = "userName")]
-    user_name: String,
-    id: String,
-    disabled: bool,
+    pub user_name: String,
+    pub email: String,
+    #[serde(rename = "firstName")]
+    pub first_name: String,
+    #[serde(rename = "lastName")]
+    pub last_name: String,
+    pub disabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ActionDescriptor {
-    id: String,
-    name: String,
-    disabled: bool,
-    description: Option<String>,
+pub struct ActionDescriptor {
+    pub id: String,
+    pub name: String,
+    pub disabled: bool,
+    pub description: Option<String>,
     #[serde(rename = "actionType")]
-    action_type: String,
+    pub action_type: String,
     #[serde(rename = "actionId")]
-    action_id: Option<String>,
-    family: Option<String>,
+    pub action_id: Option<String>,
+    pub family: Option<String>,
     #[serde(rename = "base64Image")]
-    base64_image: String,
+    pub base64_image: String,
     #[serde(rename = "assetDependencyType")]
-    asset_dependency_type: Option<String>,
+    pub asset_dependency_type: Option<String>,
     #[serde(rename = "assetDependencyVersion")]
-    asset_dependency_version: Option<String>,
+    pub asset_dependency_version: Option<String>,
     #[serde(rename = "pythonVersion")]
-    python_version: Option<String>,
+    pub python_version: Option<String>,
     #[serde(rename = "scriptFile")]
-    script_file: Option<String>,
-    version: Option<String>,
+    pub script_file: Option<String>,
+    pub version: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct TaskAction {
-    readonly: bool,
+pub struct TaskAction {
+    pub readonly: bool,
     #[serde(rename = "type")]
-    action_type: String,
-    descriptor: ActionDescriptor,
-    script: Option<String>,
+    pub action_type: String,
+    pub descriptor: ActionDescriptor,
+    pub script: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
-    id: String,
-    name: String,
-    description: Option<String>,
-    valid: bool,
-    disabled: bool,
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub valid: bool,
+    pub disabled: bool,
     #[serde(rename = "applicationId")]
-    application_id: Option<String>,
-    action: TaskAction,
+    pub application_id: Option<String>,
+    pub action: TaskAction,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LightTask {
-    id: String,
-    name: String,
-    disabled: bool,
+    pub id: String,
+    pub name: String,
+    pub disabled: bool,
     #[serde(rename = "applicationId")]
-    application_id: Option<String>,
+    pub application_id: Option<String>,
     #[serde(rename = "actionType")]
-    action_type: String,
+    pub action_type: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LightApplication {
-    id: String,
-    name: String,
-    acronym: String,
-    description: Option<String>,
+    pub id: String,
+    pub name: String,
+    pub acronym: String,
+    pub description: Option<String>,
 }
 
 impl SwimlaneClient {
@@ -134,6 +134,13 @@ impl SwimlaneClient {
         Ok(tasks)
     }
 
+    /// Gets common tasks.
+    pub async fn get_common_tasks(&self) -> Result<Vec<Task>, reqwest::Error> {
+        let url = format!("{}/api/task/common", self.base_url);
+        let tasks: Vec<Task> = self.http_client.get(url).send().await?.json().await?;
+        Ok(tasks)
+    }
+
     /// Gets a task by id.
     pub async fn get_task(&self, task_id: &str) -> Result<Task, reqwest::Error> {
         let url = format!("{}/api/task/{}", self.base_url, task_id);
@@ -165,26 +172,70 @@ impl SwimlaneClient {
         println!("Downloading tasks for application: '{}'", application.name);
         let tasks = self.get_tasks_for_application(&application.id).await?;
         let folder = path.as_ref().join(&application.name);
-        if !folder.exists() && tasks.iter().any(|t| t.action.script.is_some()) {
-            create_dir(&folder)
-                .expect(format!("Could not create folder: '{}'", folder.display()).as_str());
-        }
 
-        let tasks = tasks
+        let downloadable_tasks = tasks
             .into_iter()
             .filter(|t| t.action.script.is_some())
             .collect::<Vec<_>>();
 
+        if !folder.exists() && downloadable_tasks.len() > 0 {
+            create_dir(&folder)
+                .expect(format!("Could not create folder: '{}'", folder.display()).as_str());
+        }
+
         let mut handles = vec![];
 
-        for task in tasks {
+        for task in downloadable_tasks {
             let folder = folder.clone();
             let client = self.clone();
             let handle = tokio::spawn(async move {
+                println!("Downloading task: '{}'", task.name);
                 client
                     .save_task(&task, &folder)
                     .await
                     .expect(format!("Could not save task: '{}'", task.name).as_str());
+                println!("Downloaded task: '{}'", task.name);
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
+        }
+
+        Ok(())
+    }
+
+    pub async fn download_common_tasks(
+        &self,
+        path: &impl AsRef<Path>,
+    ) -> Result<(), reqwest::Error> {
+        println!("Downloading common tasks");
+        let tasks = self.get_common_tasks().await?;
+        let folder = path.as_ref().join("common");
+
+        let downloadable_tasks = tasks
+            .into_iter()
+            .filter(|t| t.action.script.is_some())
+            .collect::<Vec<_>>();
+
+        if !folder.exists() && downloadable_tasks.len() > 0 {
+            create_dir(&folder)
+                .expect(format!("Could not create folder: '{}'", folder.display()).as_str());
+        }
+
+        let mut handles = vec![];
+
+        for task in downloadable_tasks {
+            let folder = folder.clone();
+            let client = self.clone();
+            let handle = tokio::spawn(async move {
+                println!("Downloading task: '{}'", task.name);
+                client
+                    .save_task(&task, &folder)
+                    .await
+                    .expect(format!("Could not save task: '{}'", task.name).as_str());
+                println!("Downloaded task: '{}'", task.name);
             });
             handles.push(handle);
         }
