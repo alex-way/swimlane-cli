@@ -178,9 +178,9 @@ impl SwimlaneClient {
             .filter(|t| t.action.script.is_some())
             .collect::<Vec<_>>();
 
-        if !folder.exists() && downloadable_tasks.len() > 0 {
+        if !folder.exists() && !downloadable_tasks.is_empty() {
             create_dir(&folder)
-                .expect(format!("Could not create folder: '{}'", folder.display()).as_str());
+                .unwrap_or_else(|_| panic!("Could not create folder: '{}'", folder.display()));
         }
 
         let mut handles = vec![];
@@ -193,7 +193,7 @@ impl SwimlaneClient {
                 client
                     .save_task(&task, &folder)
                     .await
-                    .expect(format!("Could not save task: '{}'", task.name).as_str());
+                    .unwrap_or_else(|_| panic!("Could not save task: '{}'", task.name));
                 println!("Downloaded task: '{}'", task.name);
             });
             handles.push(handle);
@@ -219,9 +219,9 @@ impl SwimlaneClient {
             .filter(|t| t.action.script.is_some())
             .collect::<Vec<_>>();
 
-        if !folder.exists() && downloadable_tasks.len() > 0 {
+        if !folder.exists() && !downloadable_tasks.is_empty() {
             create_dir(&folder)
-                .expect(format!("Could not create folder: '{}'", folder.display()).as_str());
+                .unwrap_or_else(|_| panic!("Could not create folder: '{}'", folder.display()));
         }
 
         let mut handles = vec![];
@@ -234,7 +234,7 @@ impl SwimlaneClient {
                 client
                     .save_task(&task, &folder)
                     .await
-                    .expect(format!("Could not save task: '{}'", task.name).as_str());
+                    .unwrap_or_else(|_| panic!("Could not save task: '{}'", task.name));
                 println!("Downloaded task: '{}'", task.name);
             });
             handles.push(handle);
@@ -252,9 +252,9 @@ impl SwimlaneClient {
             Some(script) => {
                 let file_path = path.as_ref().join(format!("{}.py", task.name));
                 let mut file = File::create(&file_path).await?;
-                file.write_all(script.as_bytes()).await.expect(
-                    format!("Could not write to file: '{}'", &file_path.display()).as_str(),
-                );
+                file.write_all(script.as_bytes()).await.unwrap_or_else(|_| {
+                    panic!("Could not write to file: '{}'", &file_path.display())
+                });
                 Ok(())
             }
             None => Err(io::Error::new(
@@ -271,8 +271,9 @@ impl SwimlaneClient {
     ) -> Result<(), reqwest::Error> {
         // Create the path if it doesnt exist
         if !path.as_ref().exists() {
-            std::fs::create_dir(&path)
-                .expect(format!("Could not create path: '{}'", &path.as_ref().display()).as_str());
+            std::fs::create_dir(path).unwrap_or_else(|_| {
+                panic!("Could not create path: '{}'", &path.as_ref().display())
+            });
         }
 
         let applications = self
@@ -285,14 +286,14 @@ impl SwimlaneClient {
         for application in applications {
             // todo: remove requirement for cloning
             let sw = self.clone();
-            let path = path.clone().as_ref().to_path_buf();
+            let path = path.as_ref().to_path_buf();
             let handle = tokio::spawn(async move {
                 sw.download_tasks_for_application(&application, &path).await
             });
             handles.push(handle);
         }
 
-        let common_path = path.clone().as_ref().to_path_buf();
+        let common_path = path.as_ref().to_path_buf();
         let sw = self.clone();
         handles.push(tokio::spawn(async move {
             sw.download_common_tasks(&common_path).await
