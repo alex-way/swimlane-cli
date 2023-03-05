@@ -50,6 +50,11 @@ jobs:
   create-release:
     name: Create release
     if: ${{ startsWith(github.ref, 'refs/tags/swimlane-cli') }}
+    needs:
+      - check
+      - test
+      - fmt
+      - clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -78,5 +83,6 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: swimlane-cli
+          prefix: swimlane-cli@
           ref: ${{ github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
