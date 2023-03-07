@@ -37,6 +37,8 @@ enum Commands {
         destination_swimlane_url: String,
         #[arg(long, env = "SWIMLANE_CLI__DESTINATION_SWIMLANE_PAT")]
         destination_swimlane_pat: String,
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 
@@ -78,7 +80,8 @@ enum Pip {
         package: Option<String>,
     },
     /// Migrates all groups from the source Swimlane server to the destination Swimlane server
-    Remove,
+    #[command(arg_required_else_help = true)]
+    Remove { package_name: String },
     /// Migrates all roles from the source Swimlane server to the destination Swimlane server
     Freeze,
 }
@@ -111,11 +114,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .install_pip_package(&package, package_version)
                         .await?;
                 } else {
+                    // todo: return a more specific error
                     return Err("No package or requirements file specified".into());
                 }
             }
-            Pip::Remove {} => {
-                return Err("Remove is not supported".into());
+            Pip::Remove { package_name } => {
+                swimlane_client.uninstall_pip_package(&package_name).await?;
+                // todo: If package is not installed, return an error
+
+                println!("{} uninstalled", package_name);
             }
             Pip::Freeze {} => {
                 let packages = swimlane_client.get_installed_pip_packages().await?;
@@ -129,6 +136,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             migration_type,
             destination_swimlane_url,
             destination_swimlane_pat,
+            dry_run: _,
         } => match migration_type {
             Migrate::Users {} => {
                 println!("{}, {}", destination_swimlane_url, destination_swimlane_pat);
