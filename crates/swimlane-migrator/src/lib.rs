@@ -1,29 +1,28 @@
-// use swimlane::SwimlaneClient;
+use swimlane::SwimlaneClient;
 
-// pub fn migrate_users(from: &SwimlaneClient, to: &SwimlaneClient) {
-//     let users = from.get_users().unwrap();
-//     for user in users {
-//         to.create_user(&user).unwrap();
-//     }
-// }
+pub struct SwimlaneMigrator {
+    pub from: SwimlaneClient,
+    pub to: SwimlaneClient,
+}
 
-// pub fn migrate_groups(from: &SwimlaneClient, to: &SwimlaneClient) {
-//     let groups = from.get_groups().unwrap();
-//     for group in groups {
-//         to.create_group(&group).unwrap();
-//     }
-// }
+impl SwimlaneMigrator {
+    pub fn new(from: SwimlaneClient, to: SwimlaneClient) -> Self {
+        Self { from, to }
+    }
 
-// pub fn migrate_roles(from: &SwimlaneClient, to: &SwimlaneClient) {
-//     let roles = from.get_roles().unwrap();
-//     for role in roles {
-//         to.create_role(&role).unwrap();
-//     }
-// }
+    pub async fn migrate_users(&self) {
+        todo!()
+    }
 
-// pub fn migrate_apps(from: &SwimlaneClient, to: &SwimlaneClient) {
-//     let apps = from.get_apps().unwrap();
-//     for app in apps {
-//         to.create_app(&app).unwrap();
-//     }
-// }
+    pub async fn migrate_groups(&self) {
+        todo!()
+    }
+
+    pub async fn migrate_roles(&self) {
+        todo!()
+    }
+
+    pub async fn migrate_apps(&self) {
+        todo!()
+    }
+}

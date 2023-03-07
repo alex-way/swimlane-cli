@@ -834,6 +834,7 @@ version = "0.0.3"
 dependencies = [
  "clap",
  "swimlane",
+ "swimlane-migrator",
  "tokio",
 ]
 

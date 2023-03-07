@@ -1,6 +1,7 @@
 use clap::{arg, Parser, Subcommand};
 use std::path::PathBuf;
 use swimlane::SwimlaneClient;
+use swimlane_migrator::SwimlaneMigrator;
 
 #[derive(Debug, Parser)]
 #[command(name = "swimlane-cli")]
@@ -39,6 +40,8 @@ enum Commands {
         destination_swimlane_pat: String,
         #[arg(long)]
         dry_run: bool,
+        #[arg(long)]
+        auto_approve: bool,
     },
 }
 
@@ -58,12 +61,12 @@ enum Migrate {
     Roles,
     /// Migrates the specified role from the source Swimlane server to the destination Swimlane server
     #[command(arg_required_else_help = true)]
-    Role { group_id: String },
+    Role { role_id: String },
     /// Migrates all applications from the source Swimlane server to the destination Swimlane server
-    Applications,
+    Apps,
     /// Migrates the specified application from the source Swimlane server to the destination Swimlane server
     #[command(arg_required_else_help = true)]
-    Application { application_name: String },
+    App { application_name: String },
 
     /// Migrates all possible content from the source Swimlane server to the destination Swimlane server
     All,
@@ -137,37 +140,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             destination_swimlane_url,
             destination_swimlane_pat,
             dry_run: _,
-        } => match migration_type {
-            Migrate::Users {} => {
-                println!("{}, {}", destination_swimlane_url, destination_swimlane_pat);
+            auto_approve: _,
+        } => {
+            let destination_swimlane_client =
+                SwimlaneClient::new(destination_swimlane_url, destination_swimlane_pat);
+
+            destination_swimlane_client.health_ping().await?;
+
+            let migrator = SwimlaneMigrator::new(swimlane_client, destination_swimlane_client);
+
+            match migration_type {
+                Migrate::Users {} => {
+                    migrator.migrate_users().await;
+                }
+                Migrate::User { user_id: _ } => {
+                    return Err("User migration is not supported".into());
+                }
+                Migrate::Groups {} => {
+                    migrator.migrate_groups().await;
+                }
+                Migrate::Group { group_id: _ } => {
+                    return Err("Group migration is not supported".into());
+                }
+                Migrate::Roles {} => {
+                    migrator.migrate_roles().await;
+                }
+                Migrate::Role { role_id: _ } => {
+                    return Err("Role migration is not supported".into());
+                }
+                Migrate::Apps {} => {
+                    migrator.migrate_apps().await;
+                }
+                Migrate::App {
+                    application_name: _,
+                } => {
+                    return Err("Application migration is not supported".into());
+                }
+                Migrate::All {} => {
+                    return Err("All migration is not supported".into());
+                }
             }
-            Migrate::User { user_id: _ } => {
-                return Err("User migration is not supported".into());
-            }
-            Migrate::Groups {} => {
-                return Err("Group migration is not supported".into());
-            }
-            Migrate::Group { group_id: _ } => {
-                return Err("Group migration is not supported".into());
-            }
-            Migrate::Roles {} => {
-                return Err("Role migration is not supported".into());
-            }
-            Migrate::Role { group_id: _ } => {
-                return Err("Role migration is not supported".into());
-            }
-            Migrate::Applications {} => {
-                return Err("Application migration is not supported".into());
-            }
-            Migrate::Application {
-                application_name: _,
-            } => {
-                return Err("Application migration is not supported".into());
-            }
-            Migrate::All {} => {
-                return Err("All migration is not supported".into());
-            }
-        },
+        }
     }
     Ok(())
 }
