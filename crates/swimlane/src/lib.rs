@@ -139,7 +139,6 @@ impl SwimlaneClient {
         let url = format!("{}/api/health/ping", self.base_url);
         let response = self.http_client.get(url).send().await?;
         response.error_for_status()?;
-        println!("Health ping successful");
         Ok(())
     }
 

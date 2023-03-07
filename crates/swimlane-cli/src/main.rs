@@ -118,7 +118,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Err("Remove is not supported".into());
             }
             Pip::Freeze {} => {
-                return Err("Freeze is not supported".into());
+                let packages = swimlane_client.get_installed_pip_packages().await?;
+                for package in packages {
+                    let package_version = package.version.unwrap_or("latest".to_string());
+                    println!("{}=={}", package.name, package_version);
+                }
             }
         },
         Commands::Migrate {
