@@ -1,9 +1,9 @@
+pub mod error;
 mod util;
 
-use reqwest::Error as ReqwestError;
+use error::{SwimlaneClientError, UploadRequirementsError};
 use reqwest::{header::HeaderMap, Client, ClientBuilder};
 use serde::{Deserialize, Serialize};
-use std::fmt::Error;
 use std::fs::create_dir;
 use std::path::Path;
 use tokio::fs::File;
@@ -134,44 +134,46 @@ impl SwimlaneClient {
         }
     }
 
-    /// Pings the health endpoint and asserts a 200 response.
-    pub async fn health_ping(&self) -> Result<(), ReqwestError> {
+    /// Pings the health endpoint and asserts a successful response.
+    pub async fn health_ping(&self) -> Result<(), SwimlaneClientError> {
         let url = format!("{}/api/health/ping", self.base_url);
         let response = self.http_client.get(url).send().await?;
-        assert_eq!(response.status(), 200);
+        response.error_for_status()?;
         println!("Health ping successful");
         Ok(())
     }
 
     /// Gets all users.
-    pub async fn get_users(&self) -> Result<Vec<User>, ReqwestError> {
+    pub async fn get_users(&self) -> Result<Vec<User>, SwimlaneClientError> {
         let url = format!("{}/api/users", self.base_url);
         let users: Vec<User> = self.http_client.get(url).send().await?.json().await?;
         Ok(users)
     }
 
     /// Gets the tasks (light model).
-    pub async fn get_tasks_light(&self) -> Result<Vec<LightTask>, ReqwestError> {
+    pub async fn get_tasks_light(&self) -> Result<Vec<LightTask>, SwimlaneClientError> {
         let url = format!("{}/api/task/light", self.base_url);
         let tasks: Vec<LightTask> = self.http_client.get(url).send().await?.json().await?;
         Ok(tasks)
     }
 
     /// Gets common tasks.
-    pub async fn get_common_tasks(&self) -> Result<Vec<Task>, ReqwestError> {
+    pub async fn get_common_tasks(&self) -> Result<Vec<Task>, SwimlaneClientError> {
         let url = format!("{}/api/task/common", self.base_url);
         let tasks: Vec<Task> = self.http_client.get(url).send().await?.json().await?;
         Ok(tasks)
     }
 
     /// Gets a task by id.
-    pub async fn get_task(&self, task_id: &str) -> Result<Task, ReqwestError> {
+    pub async fn get_task(&self, task_id: &str) -> Result<Task, SwimlaneClientError> {
         let url = format!("{}/api/task/{}", self.base_url, task_id);
         let task: Task = self.http_client.get(url).send().await?.json().await?;
         Ok(task)
     }
 
-    pub async fn get_applications_light(&self) -> Result<Vec<LightApplication>, ReqwestError> {
+    pub async fn get_applications_light(
+        &self,
+    ) -> Result<Vec<LightApplication>, SwimlaneClientError> {
         let url = format!("{}/api/app/light", self.base_url);
         let applications: Vec<LightApplication> =
             self.http_client.get(url).send().await?.json().await?;
@@ -181,7 +183,7 @@ impl SwimlaneClient {
     pub async fn get_tasks_for_application(
         &self,
         application_id: &str,
-    ) -> Result<Vec<Task>, ReqwestError> {
+    ) -> Result<Vec<Task>, SwimlaneClientError> {
         let url = format!("{}/api/task?parentId={}", self.base_url, application_id);
         let tasks: Vec<Task> = self.http_client.get(url).send().await?.json().await?;
         Ok(tasks)
@@ -191,7 +193,7 @@ impl SwimlaneClient {
         &self,
         application: &LightApplication,
         path: &impl AsRef<Path>,
-    ) -> Result<(), ReqwestError> {
+    ) -> Result<(), SwimlaneClientError> {
         println!("Downloading tasks for application: '{}'", application.name);
         let tasks = self.get_tasks_for_application(&application.id).await?;
         let folder = path.as_ref().join(&application.name);
@@ -229,7 +231,10 @@ impl SwimlaneClient {
         Ok(())
     }
 
-    pub async fn download_common_tasks(&self, path: &impl AsRef<Path>) -> Result<(), ReqwestError> {
+    pub async fn download_common_tasks(
+        &self,
+        path: &impl AsRef<Path>,
+    ) -> Result<(), SwimlaneClientError> {
         println!("Downloading common tasks");
         let tasks = self.get_common_tasks().await?;
         let folder = path.as_ref().join("common");
@@ -285,7 +290,10 @@ impl SwimlaneClient {
     }
 
     /// Downloads all python tasks to the specified path in the format '{application_name}/{task_name}.py'
-    pub async fn download_python_tasks(&self, path: &impl AsRef<Path>) -> Result<(), ReqwestError> {
+    pub async fn download_python_tasks(
+        &self,
+        path: &impl AsRef<Path>,
+    ) -> Result<(), SwimlaneClientError> {
         // Create the path if it doesnt exist
         if !path.as_ref().exists() {
             std::fs::create_dir(path).unwrap_or_else(|_| {
@@ -317,23 +325,15 @@ impl SwimlaneClient {
         }));
 
         for handle in handles {
-            handle.await.unwrap().unwrap();
+            handle.await.unwrap()?;
         }
 
         Ok(())
     }
 
-    pub async fn get_installed_pip_packages(&self) -> Result<Vec<PipPackage>, Error> {
+    pub async fn get_installed_pip_packages(&self) -> Result<Vec<PipPackage>, SwimlaneClientError> {
         let url = format!("{}/api/pip/packages/3", self.base_url);
-        let packages: Vec<PipPackage> = self
-            .http_client
-            .get(url)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .await
-            .unwrap();
+        let packages: Vec<PipPackage> = self.http_client.get(url).send().await?.json().await?;
         // todo: make name, version lowercase
         Ok(packages)
     }
@@ -341,10 +341,29 @@ impl SwimlaneClient {
     pub async fn upload_python_requirements(
         &self,
         file_path: &impl AsRef<Path>,
-    ) -> Result<(), Error> {
-        let local_requirements = file_path_to_hashmap(file_path).unwrap();
+    ) -> Result<(), SwimlaneClientError> {
+        let local_requirements =
+            file_path_to_hashmap(file_path).unwrap_or_else(|error| match error {
+                UploadRequirementsError::DuplicatePackage {
+                    key,
+                    line_number,
+                    existing_value,
+                    new_value,
+                } => {
+                    panic!(
+                        "Duplicate package '{}' found on line {} with versions '{}' and '{}'",
+                        key, line_number, existing_value, new_value
+                    )
+                }
+                UploadRequirementsError::FileNotFound(err) => {
+                    panic!("File not found: '{}'", err)
+                }
+                UploadRequirementsError::InvalidFormat { line_number, line } => {
+                    panic!("Invalid package '{}' found on line {}", line, line_number)
+                }
+            });
 
-        let already_installed_packages = self.get_installed_pip_packages().await.unwrap();
+        let already_installed_packages = self.get_installed_pip_packages().await?;
 
         let mut packages_to_install = vec![];
         let mut packages_to_update = vec![];
@@ -376,7 +395,7 @@ impl SwimlaneClient {
         }
 
         for handle in handles {
-            handle.await.unwrap().unwrap();
+            handle.await.unwrap()?;
         }
 
         let mut handles = vec![];
@@ -386,25 +405,39 @@ impl SwimlaneClient {
         for (package, version) in packages_to_install {
             let sw = self.clone();
             let handle = tokio::spawn(async move {
-                sw.install_pip_package(package.as_str(), version.as_str())
+                sw.install_pip_package(package.as_str(), Some(version.as_str()))
                     .await
             });
             handles.push(handle);
         }
 
         for handle in handles {
-            handle.await.unwrap().unwrap();
+            handle.await.unwrap()?;
         }
 
         Ok(())
     }
 
-    pub async fn install_pip_package(&self, name: &str, version: &str) -> Result<(), Error> {
-        println!("Installing pip package '{}=={}'", name, version);
+    pub async fn install_pip_package(
+        &self,
+        name: &str,
+        version: Option<&str>,
+    ) -> Result<(), SwimlaneClientError> {
+        let version_to_install: Option<String> = match version {
+            Some(v) => {
+                println!("Installing pip package '{}=={}'", name, v);
+                Some(v.to_string())
+            }
+            None => {
+                println!("Installing pip package '{}' @ latest", name);
+                None
+            }
+        };
+
         let url = format!("{}/api/pip/packages/", self.base_url);
         let body = PipPackage {
             name: name.to_string(),
-            version: Some(version.to_string()),
+            version: version_to_install,
             python_version: "Python3".to_string(),
             id: None,
             author: None,
@@ -433,7 +466,7 @@ impl SwimlaneClient {
         Ok(())
     }
 
-    pub async fn uninstall_pip_package(&self, name: &str) -> Result<(), Error> {
+    pub async fn uninstall_pip_package(&self, name: &str) -> Result<(), SwimlaneClientError> {
         println!("Uninstalling pip package '{}'", name);
         let url = format!("{}/api/pip/packages/{}/3", self.base_url, name);
         let response = self

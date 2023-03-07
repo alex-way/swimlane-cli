@@ -2,4 +2,5 @@
 members = [
     "crates/swimlane",
     "crates/swimlane-cli",
+    "crates/swimlane-migrator"
 ]
