@@ -22,7 +22,7 @@ pub enum SwimlaneMigratorError {
     SwimlaneError(#[from] swimlane::error::SwimlaneClientError),
 }
 
-pub enum MigrationPlan<T> {
+pub enum MigrationPlan<T: LooksLike> {
     Create {
         source_resource: T,
     },
