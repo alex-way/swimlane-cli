@@ -835,6 +835,7 @@ dependencies = [
  "clap",
  "swimlane",
  "swimlane-migrator",
+ "thiserror",
  "tokio",
 ]
 
@@ -843,6 +844,7 @@ name = "swimlane-migrator"
 version = "0.0.0"
 dependencies = [
  "swimlane",
+ "thiserror",
 ]
 
 [[package]]

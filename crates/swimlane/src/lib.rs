@@ -4,6 +4,7 @@ mod util;
 use error::{SwimlaneClientError, UploadRequirementsError};
 use reqwest::{header::HeaderMap, Client, ClientBuilder};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::create_dir;
 use std::path::Path;
 use tokio::fs::File;
@@ -13,23 +14,26 @@ use util::file_path_to_hashmap;
 #[derive(Clone)]
 pub struct SwimlaneClient {
     http_client: Client,
-    base_url: String,
+    pub base_url: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
     pub id: String,
     #[serde(rename = "userName")]
     pub user_name: String,
     pub email: String,
     #[serde(rename = "firstName")]
-    pub first_name: String,
+    pub first_name: Option<String>,
     #[serde(rename = "lastName")]
-    pub last_name: String,
+    pub last_name: Option<String>,
+    pub name: String,
+    #[serde(rename = "displayName")]
+    pub display_name: Option<String>,
     pub disabled: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ActionDescriptor {
     pub id: String,
     pub name: String,
@@ -53,7 +57,7 @@ pub struct ActionDescriptor {
     pub version: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TaskAction {
     pub readonly: bool,
     #[serde(rename = "type")]
@@ -62,7 +66,7 @@ pub struct TaskAction {
     pub script: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Task {
     pub id: String,
     pub name: String,
@@ -74,7 +78,41 @@ pub struct Task {
     pub action: TaskAction,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BaseEntity {
+    pub id: String,
+    pub name: String,
+    pub disabled: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UserGroupSelection {
+    pub id: Option<String>,
+    pub name: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Group {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub users: Vec<BaseEntity>,
+    pub groups: Vec<BaseEntity>,
+    pub roles: Vec<BaseEntity>,
+    #[serde(rename = "createdDate")]
+    pub created_date: String, // todo: convert to date
+    #[serde(rename = "modifiedDate")]
+    pub modified_date: String, // todo: convert to date
+    pub disabled: bool,
+    #[serde(rename = "activeDirectoryGuids")]
+    pub active_directory_guids: Option<Vec<String>>,
+    #[serde(rename = "createdByUser")]
+    pub created_by_user: UserGroupSelection,
+    #[serde(rename = "modifiedByUser")]
+    pub modified_by_user: UserGroupSelection,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LightTask {
     pub id: String,
     pub name: String,
@@ -85,7 +123,7 @@ pub struct LightTask {
     pub action_type: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LightApplication {
     pub id: String,
     pub name: String,
@@ -93,7 +131,7 @@ pub struct LightApplication {
     pub description: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PipPackage {
     pub name: String,
     pub version: Option<String>,
@@ -144,9 +182,29 @@ impl SwimlaneClient {
 
     /// Gets all users.
     pub async fn get_users(&self) -> Result<Vec<User>, SwimlaneClientError> {
-        let url = format!("{}/api/users", self.base_url);
-        let users: Vec<User> = self.http_client.get(url).send().await?.json().await?;
-        Ok(users)
+        let url = format!("{}/api/user", self.base_url);
+
+        #[derive(Deserialize)]
+        struct UserResponse {
+            items: Vec<User>,
+        }
+
+        // todo: recusively loop through all users until there's no more users
+        let users: UserResponse = self.http_client.get(url).send().await?.json().await?;
+        Ok(users.items)
+    }
+
+    pub async fn get_groups(&self) -> Result<Vec<Group>, SwimlaneClientError> {
+        let url = format!("{}/api/groups", self.base_url);
+
+        #[derive(Deserialize)]
+        struct GroupResponse {
+            items: Vec<Group>,
+        }
+
+        // todo: recusively loop through all groups until there's no more groups
+        let groups: GroupResponse = self.http_client.get(url).send().await?.json().await?;
+        Ok(groups.items)
     }
 
     /// Gets the tasks (light model).
@@ -482,5 +540,33 @@ impl SwimlaneClient {
             );
         }
         Ok(())
+    }
+
+    pub async fn get_task_hashmap(&self) -> Result<HashMap<String, String>, SwimlaneClientError> {
+        let tasks = self.get_tasks_light().await?;
+
+        let mut hashmap = HashMap::new();
+
+        for task in tasks {
+            hashmap.insert(task.name.clone(), task.id.clone());
+            hashmap.insert(task.id.clone(), task.name.clone());
+        }
+
+        Ok(hashmap)
+    }
+
+    pub async fn get_application_hashmap(
+        &self,
+    ) -> Result<HashMap<String, String>, SwimlaneClientError> {
+        let applications = self.get_applications_light().await?;
+
+        let mut hashmap = HashMap::new();
+
+        for application in applications {
+            hashmap.insert(application.name.clone(), application.id.clone());
+            hashmap.insert(application.id.clone(), application.name.clone());
+        }
+
+        Ok(hashmap)
     }
 }

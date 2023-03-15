@@ -2,6 +2,7 @@ use clap::{arg, Parser, Subcommand};
 use std::path::PathBuf;
 use swimlane::SwimlaneClient;
 use swimlane_migrator::SwimlaneMigrator;
+use thiserror::Error;
 
 #[derive(Debug, Parser)]
 #[command(name = "swimlane-cli")]
@@ -89,17 +90,31 @@ enum Pip {
     Freeze,
 }
 
+#[derive(Error, Debug)]
+pub enum SwimlaneCliError {
+    #[error("Swimlane error")]
+    SwimlaneError(#[from] swimlane::error::SwimlaneClientError),
+    #[error("Error occurred whilst trying to create a new Swimlane migrator instance")]
+    SwimlaneMigratorCreationError(#[from] swimlane_migrator::SwimlaneMigratorNewError),
+    #[error("Swimlane migrator error")]
+    SwimlaneMigratorError(#[from] swimlane_migrator::SwimlaneMigratorError),
+    #[error("No package or requirements file specified")]
+    NoPackageOrRequirementsFileSpecified,
+    #[error("Package {0} does not exist")]
+    PackageDoesNotExist(String),
+    #[error("Generic error")]
+    GenericError(#[source] Box<dyn std::error::Error>),
+}
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), SwimlaneCliError> {
     let args = Cli::parse();
 
     let swimlane_client = SwimlaneClient::new(args.source_swimlane_url, args.source_swimlane_pat);
 
-    swimlane_client.health_ping().await?;
-
     match args.command {
         Commands::DownloadPythonTasks { path } => {
-            swimlane_client.download_python_tasks(&path).await?;
+            download_python_tasks(&swimlane_client, &path).await?
         }
         Commands::Pip { subcommand } => match subcommand {
             Pip::Install {
@@ -117,69 +132,100 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .install_pip_package(&package, package_version)
                         .await?;
                 } else {
-                    // todo: return a more specific error
-                    return Err("No package or requirements file specified".into());
+                    return Err(SwimlaneCliError::NoPackageOrRequirementsFileSpecified);
                 }
             }
             Pip::Remove { package_name } => {
-                swimlane_client.uninstall_pip_package(&package_name).await?;
-                // todo: If package is not installed, return an error
-
-                println!("{} uninstalled", package_name);
+                remove_python_package(&swimlane_client, &package_name).await?
             }
-            Pip::Freeze {} => {
-                let packages = swimlane_client.get_installed_pip_packages().await?;
-                for package in packages {
-                    let package_version = package.version.unwrap_or("latest".to_string());
-                    println!("{}=={}", package.name, package_version);
-                }
-            }
+            Pip::Freeze {} => freeze_python_packages(&swimlane_client).await?,
         },
         Commands::Migrate {
             migration_type,
             destination_swimlane_url,
             destination_swimlane_pat,
-            dry_run: _,
+            dry_run,
             auto_approve: _,
         } => {
-            let destination_swimlane_client =
-                SwimlaneClient::new(destination_swimlane_url, destination_swimlane_pat);
+            handle_migrate(
+                swimlane_client,
+                migration_type,
+                destination_swimlane_url,
+                destination_swimlane_pat,
+                dry_run,
+            )
+            .await?
+        }
+    }
+    Ok(())
+}
 
-            destination_swimlane_client.health_ping().await?;
+async fn download_python_tasks(
+    swimlane_client: &SwimlaneClient,
+    path: &PathBuf,
+) -> Result<(), SwimlaneCliError> {
+    swimlane_client.download_python_tasks(&path).await?;
+    Ok(())
+}
 
-            let migrator = SwimlaneMigrator::new(swimlane_client, destination_swimlane_client);
+async fn remove_python_package(
+    swimlane_client: &SwimlaneClient,
+    package_name: &str,
+) -> Result<(), SwimlaneCliError> {
+    swimlane_client.uninstall_pip_package(package_name).await?;
+    Ok(())
+}
 
-            match migration_type {
-                Migrate::Users {} => {
-                    migrator.migrate_users().await;
-                }
-                Migrate::User { user_id: _ } => {
-                    return Err("User migration is not supported".into());
-                }
-                Migrate::Groups {} => {
-                    migrator.migrate_groups().await;
-                }
-                Migrate::Group { group_id: _ } => {
-                    return Err("Group migration is not supported".into());
-                }
-                Migrate::Roles {} => {
-                    migrator.migrate_roles().await;
-                }
-                Migrate::Role { role_id: _ } => {
-                    return Err("Role migration is not supported".into());
-                }
-                Migrate::Apps {} => {
-                    migrator.migrate_apps().await;
-                }
-                Migrate::App {
-                    application_name: _,
-                } => {
-                    return Err("Application migration is not supported".into());
-                }
-                Migrate::All {} => {
-                    return Err("All migration is not supported".into());
-                }
-            }
+async fn freeze_python_packages(swimlane_client: &SwimlaneClient) -> Result<(), SwimlaneCliError> {
+    let packages = swimlane_client.get_installed_pip_packages().await?;
+    for package in packages {
+        let package_version = package.version.unwrap_or("latest".to_string());
+        println!("{}=={}", package.name, package_version);
+    }
+    Ok(())
+}
+
+async fn handle_migrate(
+    swimlane_client: SwimlaneClient,
+    migration_type: Migrate,
+    destination_swimlane_url: String,
+    destination_swimlane_pat: String,
+    dry_run: bool,
+) -> Result<(), SwimlaneCliError> {
+    let destination_swimlane_client =
+        SwimlaneClient::new(destination_swimlane_url, destination_swimlane_pat);
+
+    let migrator = SwimlaneMigrator::new(swimlane_client, destination_swimlane_client, dry_run)?;
+
+    match migration_type {
+        Migrate::Users {} => {
+            migrator.migrate_users().await?;
+        }
+        Migrate::User { user_id: _ } => {
+            todo!();
+        }
+        Migrate::Groups {} => {
+            migrator.migrate_groups().await?;
+        }
+        Migrate::Group { group_id: _ } => {
+            todo!();
+        }
+        Migrate::Roles {} => {
+            migrator.migrate_roles().await;
+        }
+        Migrate::Role { role_id: _ } => {
+            todo!();
+        }
+        Migrate::Apps {} => {
+            migrator.migrate_apps().await;
+        }
+        Migrate::App {
+            application_name: _,
+        } => {
+            todo!();
+        }
+        Migrate::All {} => {
+            todo!();
         }
     }
     Ok(())
