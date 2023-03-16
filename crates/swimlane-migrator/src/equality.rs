@@ -1,4 +1,5 @@
-use swimlane::{Group, User};
+use swimlane::groups::Group;
+use swimlane::users::User;
 
 pub trait LooksLike {
     /// Whether the main fields of the two objects are identical
