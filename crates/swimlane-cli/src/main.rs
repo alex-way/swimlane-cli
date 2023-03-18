@@ -1,7 +1,8 @@
 use clap::{arg, Parser, Subcommand};
+use colored::Colorize;
 use std::path::PathBuf;
 use swimlane::SwimlaneClient;
-use swimlane_migrator::SwimlaneMigrator;
+use swimlane_migrator::{MigrationPlan, SwimlaneMigrator};
 use thiserror::Error;
 
 #[derive(Debug, Parser)]
@@ -204,9 +205,40 @@ async fn handle_migrate(
         Migrate::User { user_id: _ } => {
             todo!();
         }
-        Migrate::Groups {} => {
-            migrator.migrate_groups().await?;
-        }
+        Migrate::Groups {} => match dry_run {
+            true => {
+                println!("Dry run enabled, no changes will be made");
+                let groups = migrator.get_groups_to_migrate().await?;
+
+                if groups.is_empty() {
+                    println!(
+                        "{}",
+                        "No changed detected. Everything is up to date.".green()
+                    );
+                }
+
+                // todo: order by type of change (create, update, delete)
+                for group in groups {
+                    match group {
+                        MigrationPlan::Create { source_resource } => {
+                            println!("Group: {} will be created", source_resource.name.green());
+                        }
+                        MigrationPlan::Update {
+                            source_resource,
+                            destination_resource: _,
+                        } => {
+                            println!("Group: {} will be updated", source_resource.name.yellow());
+                        }
+                        MigrationPlan::Delete {
+                            destination_resource,
+                        } => {
+                            println!("Group: {} will be deleted", destination_resource.name.red());
+                        }
+                    }
+                }
+            }
+            false => migrator.migrate_groups().await?,
+        },
         Migrate::Group { group_id: _ } => {
             todo!();
         }

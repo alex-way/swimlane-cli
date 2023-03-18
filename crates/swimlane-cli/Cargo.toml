@@ -9,3 +9,4 @@ tokio = { version = "1", features = ["full"] }
 swimlane = { path = "../swimlane" }
 swimlane-migrator = { path = "../swimlane-migrator" }
 thiserror = "1.0"
+colored = "2"
