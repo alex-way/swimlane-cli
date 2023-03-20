@@ -1,16 +1,22 @@
+mod cmd;
+pub mod error;
+pub mod util;
+
 use clap::{arg, Parser, Subcommand};
-use colored::Colorize;
+use cmd::commands::{
+    download_python_tasks, freeze_python_packages, handle_migrate, remove_python_package,
+};
+use error::SwimlaneCliError;
 use std::path::PathBuf;
 use swimlane::SwimlaneClient;
-use swimlane_migrator::{MigrationPlan, SwimlaneMigrator};
-use thiserror::Error;
+use util::parse_package_version;
 
 #[derive(Debug, Parser)]
 #[command(name = "swimlane-cli")]
 #[command(about = "A simple CLI for interacting with Swimlane", long_about = None)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Command,
 
     #[arg(long, env = "SWIMLANE_CLI__SOURCE_SWIMLANE_URL")]
     source_swimlane_url: String,
@@ -20,7 +26,7 @@ struct Cli {
 }
 
 #[derive(Debug, Subcommand)]
-enum Commands {
+pub enum Command {
     /// Downloads all custom python tasks to a specified path
     #[command(arg_required_else_help = true)]
     DownloadPythonTasks {
@@ -48,7 +54,7 @@ enum Commands {
 }
 
 #[derive(Debug, Subcommand)]
-enum Migrate {
+pub enum Migrate {
     /// Migrates all users from the source Swimlane server to the destination Swimlane server
     Users,
     /// Migrates the specified user from the source Swimlane server to the destination Swimlane server
@@ -75,7 +81,7 @@ enum Migrate {
 }
 
 #[derive(Debug, Subcommand)]
-enum Pip {
+pub enum Pip {
     /// Installs a specified package or requirements.txt file
     #[command(arg_required_else_help = true)]
     Install {
@@ -91,22 +97,6 @@ enum Pip {
     Freeze,
 }
 
-#[derive(Error, Debug)]
-pub enum SwimlaneCliError {
-    #[error("Swimlane error")]
-    SwimlaneError(#[from] swimlane::error::SwimlaneClientError),
-    #[error("Error occurred whilst trying to create a new Swimlane migrator instance")]
-    SwimlaneMigratorCreationError(#[from] swimlane_migrator::SwimlaneMigratorNewError),
-    #[error("Swimlane migrator error")]
-    SwimlaneMigratorError(#[from] swimlane_migrator::SwimlaneMigratorError),
-    #[error("No package or requirements file specified")]
-    NoPackageOrRequirementsFileSpecified,
-    #[error("Package {0} does not exist")]
-    PackageDoesNotExist(String),
-    #[error("Generic error")]
-    GenericError(#[source] Box<dyn std::error::Error>),
-}
-
 #[tokio::main]
 async fn main() -> Result<(), SwimlaneCliError> {
     let args = Cli::parse();
@@ -114,10 +104,10 @@ async fn main() -> Result<(), SwimlaneCliError> {
     let swimlane_client = SwimlaneClient::new(args.source_swimlane_url, args.source_swimlane_pat);
 
     match args.command {
-        Commands::DownloadPythonTasks { path } => {
+        Command::DownloadPythonTasks { path } => {
             download_python_tasks(&swimlane_client, &path).await?
         }
-        Commands::Pip { subcommand } => match subcommand {
+        Command::Pip { subcommand } => match subcommand {
             Pip::Install {
                 requirements_file,
                 package,
@@ -127,6 +117,7 @@ async fn main() -> Result<(), SwimlaneCliError> {
                         .upload_python_requirements(&requirements_file)
                         .await?;
                 } else if let Some(package) = package {
+                    // todo: handle invalid package version
                     let package_version = parse_package_version(&package);
 
                     swimlane_client
@@ -141,7 +132,7 @@ async fn main() -> Result<(), SwimlaneCliError> {
             }
             Pip::Freeze {} => freeze_python_packages(&swimlane_client).await?,
         },
-        Commands::Migrate {
+        Command::Migrate {
             migration_type,
             destination_swimlane_url,
             destination_swimlane_pat,
@@ -159,120 +150,4 @@ async fn main() -> Result<(), SwimlaneCliError> {
         }
     }
     Ok(())
-}
-
-async fn download_python_tasks(
-    swimlane_client: &SwimlaneClient,
-    path: &PathBuf,
-) -> Result<(), SwimlaneCliError> {
-    swimlane_client.download_python_tasks(&path).await?;
-    Ok(())
-}
-
-async fn remove_python_package(
-    swimlane_client: &SwimlaneClient,
-    package_name: &str,
-) -> Result<(), SwimlaneCliError> {
-    swimlane_client.uninstall_pip_package(package_name).await?;
-    Ok(())
-}
-
-async fn freeze_python_packages(swimlane_client: &SwimlaneClient) -> Result<(), SwimlaneCliError> {
-    let packages = swimlane_client.get_installed_pip_packages().await?;
-    for package in packages {
-        let package_version = package.version.unwrap_or("latest".to_string());
-        println!("{}=={}", package.name, package_version);
-    }
-    Ok(())
-}
-
-async fn handle_migrate(
-    swimlane_client: SwimlaneClient,
-    migration_type: Migrate,
-    destination_swimlane_url: String,
-    destination_swimlane_pat: String,
-    dry_run: bool,
-) -> Result<(), SwimlaneCliError> {
-    let destination_swimlane_client =
-        SwimlaneClient::new(destination_swimlane_url, destination_swimlane_pat);
-
-    let migrator = SwimlaneMigrator::new(swimlane_client, destination_swimlane_client, dry_run)?;
-
-    match migration_type {
-        Migrate::Users {} => {
-            migrator.migrate_users().await?;
-        }
-        Migrate::User { user_id: _ } => {
-            todo!();
-        }
-        Migrate::Groups {} => match dry_run {
-            true => {
-                println!("Dry run enabled, no changes will be made");
-                let groups = migrator.get_groups_to_migrate().await?;
-
-                if groups.is_empty() {
-                    println!(
-                        "{}",
-                        "No changed detected. Everything is up to date.".green()
-                    );
-                }
-
-                // todo: order by type of change (create, update, delete)
-                for group in groups {
-                    match group {
-                        MigrationPlan::Create { source_resource } => {
-                            println!("Group: {} will be created", source_resource.name.green());
-                        }
-                        MigrationPlan::Update {
-                            source_resource,
-                            destination_resource: _,
-                        } => {
-                            println!("Group: {} will be updated", source_resource.name.yellow());
-                        }
-                        MigrationPlan::Delete {
-                            destination_resource,
-                        } => {
-                            println!("Group: {} will be deleted", destination_resource.name.red());
-                        }
-                    }
-                }
-            }
-            false => migrator.migrate_groups().await?,
-        },
-        Migrate::Group { group_id: _ } => {
-            todo!();
-        }
-        Migrate::Roles {} => {
-            migrator.migrate_roles().await;
-        }
-        Migrate::Role { role_id: _ } => {
-            todo!();
-        }
-        Migrate::Apps {} => {
-            migrator.migrate_apps().await;
-        }
-        Migrate::App {
-            application_name: _,
-        } => {
-            todo!();
-        }
-        Migrate::All {} => {
-            todo!();
-        }
-    }
-    Ok(())
-}
-
-fn parse_package_version(package_version: &str) -> Option<&str> {
-    let package_version = package_version.trim();
-    match package_version.is_empty() {
-        true => None,
-        false => {
-            let split = package_version.split("==").collect::<Vec<&str>>();
-            match split.len() {
-                2 => Some(split[1]),
-                _ => None,
-            }
-        }
-    }
 }

@@ -11,17 +11,17 @@ use error::SwimlaneClientError;
 use reqwest::{header::HeaderMap, Client, ClientBuilder};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
-pub struct SwimlaneClient {
-    http_client: Client,
-    pub base_url: String,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BaseEntity {
     pub id: String,
     pub name: String,
     pub disabled: bool,
+}
+
+#[derive(Clone)]
+pub struct SwimlaneClient {
+    http_client: Client,
+    pub base_url: String,
 }
 
 impl SwimlaneClient {

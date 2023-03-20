@@ -1,4 +1,5 @@
 use swimlane::groups::Group;
+use swimlane::roles::Role;
 use swimlane::users::User;
 
 pub trait LooksLike {
@@ -6,17 +7,31 @@ pub trait LooksLike {
     /// For example,
     ///
     /// ```
-    /// let a = User {
-    ///    id: "2".to_string()
-    ///    user_name: "user1".to_string()
+    /// use swimlane_migrator::equality::LooksLike;
+    ///
+    /// struct User {
+    ///   id: String,
+    ///   user_name: String,
     /// }
+    ///
+    /// impl LooksLike for User {
+    ///  fn looks_like(&self, other: &Self) -> bool {
+    ///   self.user_name == other.user_name
+    ///  }
+    /// }
+    ///
+    ///
+    /// let a = User {
+    ///  id: "2".to_string(),
+    ///  user_name: "user1".to_string(),
+    /// };
     ///
     /// let b = User {
-    ///   id: "1".to_string()
-    ///   user_name: "user1".to_string()
-    /// }
+    ///  id: "1".to_string(),
+    ///  user_name: "user1".to_string(),
+    /// };
     ///
-    /// a.looks_like(&b) // true
+    /// assert_eq!(a.looks_like(&b), true)
     /// ```
     ///
     /// Notice that the id is different, but the user_name is the same.
@@ -43,5 +58,12 @@ impl LooksLike for User {
             && self.email == other.email
             && self.first_name == other.first_name
             && self.last_name == other.last_name
+    }
+}
+
+impl LooksLike for Role {
+    fn looks_like(&self, other: &Self) -> bool {
+        // todo: compare group membership, role membership, permissions
+        self.disabled == other.disabled && self.description == other.description
     }
 }

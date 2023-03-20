@@ -160,38 +160,37 @@ impl SwimlaneMigrator {
         Ok(groups_to_migrate)
     }
 
-    // logger.info("Migrating Groups...")
-    // source_groups = self.source.groups.list()
-    // destination_groups = self.destination.groups.list()
-    // destination_group_names = [g.name for g in destination_groups]
+    pub async fn get_roles_to_migrate(
+        &self,
+    ) -> Result<Vec<MigrationPlan<swimlane::roles::Role>>, SwimlaneMigratorError> {
+        let source_roles = self.from.get_roles();
+        let destination_roles = self.to.get_roles();
 
-    // # First create any missing groups
-    // for s_group in source_groups:
-    //     if s_group.name in destination_group_names:
-    //         continue
-    //     logger.info(f"Creating Group: {s_group.name}")
-    //     source_definition = s_group._raw
-    //     definition = {
-    //         "name": s_group.name,
-    //         "description": source_definition.get("description", ""),
-    //     }
-    //     response = self.destination.request("post", "groups", json=definition)
-    //     response.raise_for_status()
+        let source_roles = source_roles.await?;
+        let destination_roles = destination_roles.await?;
 
-    // # Next update all groups with the required sub-groups
-    // # Build a dictionary for each group
-    // group_mapping = {}
-    // for s_group in source_groups:
-    //     group_mapping[s_group.name] = [g["name"] for g in s_group._raw["groups"]]
+        let mut roles_to_migrate = vec![];
 
-    // # Refresh the destination groups
-    // destination_groups = self.destination.groups.list()
-    // # Update all groups with the subgroups
-    // for d_group in destination_groups:
-    //     definition = d_group._raw
-    //     definition["groups"] = [{"name": g} for g in group_mapping[d_group.name]]
-    //     logger.info(f"Updating group {d_group.name}")
-    //     self.destination.request("put", f"groups/{d_group.id}", json=definition)
+        for source_role in source_roles {
+            if let Some(_destination_role) = destination_roles.iter().find(|destination_role| {
+                destination_role.name.to_lowercase() == source_role.name.to_lowercase()
+            }) {
+                if source_role.looks_like(_destination_role) {
+                    continue;
+                }
+                roles_to_migrate.push(MigrationPlan::Update {
+                    source_resource: source_role,
+                    destination_resource: _destination_role.clone(),
+                });
+            } else {
+                roles_to_migrate.push(MigrationPlan::Create {
+                    source_resource: source_role,
+                });
+            }
+        }
+
+        Ok(roles_to_migrate)
+    }
 
     /// Returns a hashmap of id to id for all groups present in both the source and destination systems
     pub async fn get_group_id_hashmap(
