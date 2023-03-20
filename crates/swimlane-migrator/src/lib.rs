@@ -225,17 +225,17 @@ impl SwimlaneMigrator {
         let source_users = source_users.await?;
         let destination_users = destination_users.await?;
 
-        let mut user_id_hashmap = HashMap::new();
+        let mut hashmap = HashMap::new();
 
         for source_user in source_users {
             if let Some(destination_user) = destination_users.iter().find(|destination_user| {
                 destination_user.user_name.to_lowercase() == source_user.user_name.to_lowercase()
             }) {
-                user_id_hashmap.insert(source_user.id.clone(), destination_user.id.clone());
+                hashmap.insert(source_user.id.clone(), destination_user.id.clone());
             }
         }
 
-        Ok(user_id_hashmap)
+        Ok(hashmap)
     }
 
     /// Returns a hashmap of id to id for all roles present in both the source and destination systems
@@ -248,13 +248,33 @@ impl SwimlaneMigrator {
         let source_roles = source_roles.await?;
         let destination_roles = destination_roles.await?;
 
-        let mut role_id_hashmap = HashMap::new();
+        let mut hashmap = HashMap::new();
 
         for source_role in source_roles {
             if let Some(destination_role) = destination_roles.iter().find(|destination_role| {
                 destination_role.name.to_lowercase() == source_role.name.to_lowercase()
             }) {
-                role_id_hashmap.insert(source_role.id.clone(), destination_role.id.clone());
+                hashmap.insert(source_role.id.clone(), destination_role.id.clone());
+            }
+        }
+
+        Ok(hashmap)
+    }
+
+    pub async fn get_task_hashmap(&self) -> Result<HashMap<String, String>, SwimlaneMigratorError> {
+        let source_tasks = self.from.get_tasks_light();
+        let destination_tasks = self.to.get_tasks_light();
+
+        let source_tasks = source_tasks.await?;
+        let destination_tasks = destination_tasks.await?;
+
+        let mut role_id_hashmap = HashMap::new();
+
+        for source_task in source_tasks {
+            if let Some(destination_task) = destination_tasks.iter().find(|destination_task| {
+                destination_task.name.to_lowercase() == source_task.name.to_lowercase()
+            }) {
+                role_id_hashmap.insert(source_task.id.clone(), destination_task.id.clone());
             }
         }
 

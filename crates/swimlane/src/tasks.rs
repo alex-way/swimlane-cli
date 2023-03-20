@@ -1,7 +1,6 @@
 use crate::{SwimlaneClient, SwimlaneClientError};
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ActionDescriptor {
@@ -79,19 +78,5 @@ impl SwimlaneClient {
         let url = format!("{}/api/task/{}", self.base_url, task_id);
         let task: Task = self.http_client.get(url).send().await?.json().await?;
         Ok(task)
-    }
-
-    // todo: move this to the migrator crate
-    pub async fn get_task_hashmap(&self) -> Result<HashMap<String, String>, SwimlaneClientError> {
-        let tasks = self.get_tasks_light().await?;
-
-        let mut hashmap = HashMap::new();
-
-        for task in tasks {
-            hashmap.insert(task.name.clone(), task.id.clone());
-            hashmap.insert(task.id.clone(), task.name.clone());
-        }
-
-        Ok(hashmap)
     }
 }
