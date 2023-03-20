@@ -1,4 +1,5 @@
 use crate::users::UserGroupSelection;
+use crate::util::PagedResponse;
 use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
 
 use chrono::{DateTime, Utc};
@@ -29,13 +30,8 @@ impl SwimlaneClient {
     pub async fn get_groups(&self) -> Result<Vec<Group>, SwimlaneClientError> {
         let url = format!("{}/api/groups", self.base_url);
 
-        #[derive(Deserialize)]
-        struct GroupResponse {
-            items: Vec<Group>,
-        }
-
         // todo: recusively loop through all groups until there's no more groups
-        let groups: GroupResponse = self.http_client.get(url).send().await?.json().await?;
+        let groups: PagedResponse<Group> = self.http_client.get(url).send().await?.json().await?;
         Ok(groups.items)
     }
 

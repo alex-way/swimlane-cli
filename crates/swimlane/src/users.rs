@@ -1,4 +1,4 @@
-use crate::{SwimlaneClient, SwimlaneClientError};
+use crate::{util::PagedResponse, SwimlaneClient, SwimlaneClientError};
 
 use serde::{Deserialize, Serialize};
 
@@ -29,13 +29,8 @@ impl SwimlaneClient {
     pub async fn get_users(&self) -> Result<Vec<User>, SwimlaneClientError> {
         let url = format!("{}/api/user", self.base_url);
 
-        #[derive(Deserialize)]
-        struct UserResponse {
-            items: Vec<User>,
-        }
-
         // todo: recusively loop through all users until there's no more users
-        let users: UserResponse = self.http_client.get(url).send().await?.json().await?;
+        let users: PagedResponse<User> = self.http_client.get(url).send().await?.json().await?;
         Ok(users.items)
     }
 }

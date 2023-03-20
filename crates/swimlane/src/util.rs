@@ -1,3 +1,5 @@
+use serde::Deserialize;
+
 use crate::error::UploadRequirementsError;
 use std::collections::HashMap;
 use std::fs::File;
@@ -46,4 +48,11 @@ pub fn file_path_to_hashmap(
     }
 
     Ok(requirements)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PagedResponse<T> {
+    #[serde(rename = "totalCount")]
+    pub total_count: usize,
+    pub items: Vec<T>,
 }
