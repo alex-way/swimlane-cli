@@ -1,6 +1,7 @@
 use crate::users::UserGroupSelection;
 use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -12,9 +13,9 @@ pub struct Group {
     pub groups: Vec<BaseEntity>,
     pub roles: Vec<BaseEntity>,
     #[serde(rename = "createdDate")]
-    pub created_date: String, // todo: convert to date
+    pub created_date: DateTime<Utc>,
     #[serde(rename = "modifiedDate")]
-    pub modified_date: String, // todo: convert to date
+    pub modified_date: DateTime<Utc>,
     pub disabled: bool,
     #[serde(rename = "activeDirectoryGuids")]
     pub active_directory_guids: Option<Vec<String>>,

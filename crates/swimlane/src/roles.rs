@@ -3,6 +3,8 @@ use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
 
 use serde::{Deserialize, Serialize};
 
+use chrono::{DateTime, Utc};
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Role {
     pub id: String,
@@ -11,9 +13,9 @@ pub struct Role {
     pub description: Option<String>,
     // permissions: Vec<String>, // todo: handle permissions matrix
     #[serde(rename = "createdDate")]
-    pub created_date: String, // todo: convert to DateTime
+    pub created_date: DateTime<Utc>,
     #[serde(rename = "modifiedDate")]
-    pub modified_date: String, // todo: convert to DateTime
+    pub modified_date: DateTime<Utc>,
     #[serde(rename = "createdByUser")]
     pub created_by_user: Option<UserGroupSelection>,
     #[serde(rename = "modifiedByUser")]
