@@ -1,17 +1,8 @@
 use crate::error::SwimlaneCliError;
 use crate::Migrate;
 use colored::Colorize;
-use std::path::PathBuf;
 use swimlane::SwimlaneClient;
 use swimlane_migrator::{MigrationPlan, SwimlaneMigrator};
-
-pub async fn download_python_tasks(
-    swimlane_client: &SwimlaneClient,
-    path: &PathBuf,
-) -> Result<(), SwimlaneCliError> {
-    swimlane_client.download_python_tasks(&path).await?;
-    Ok(())
-}
 
 pub async fn remove_python_package(
     swimlane_client: &SwimlaneClient,

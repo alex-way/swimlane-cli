@@ -3,9 +3,8 @@ pub mod error;
 pub mod util;
 
 use clap::{arg, Parser, Subcommand};
-use cmd::commands::{
-    download_python_tasks, freeze_python_packages, handle_migrate, remove_python_package,
-};
+use cmd::commands::{freeze_python_packages, handle_migrate, remove_python_package};
+use cmd::task::download_python_tasks;
 use error::SwimlaneCliError;
 use std::path::PathBuf;
 use swimlane::SwimlaneClient;
