@@ -21,6 +21,8 @@ pub enum SwimlaneClientError {
     IoError(#[from] io::Error),
     #[error("Request Error")]
     ReqwestError(#[from] ReqwestError),
+    #[error("Parse Error")]
+    ParseError(#[from] url::ParseError),
 }
 
 #[derive(Debug, Clone)]

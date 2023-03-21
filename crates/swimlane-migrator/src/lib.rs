@@ -268,17 +268,47 @@ impl SwimlaneMigrator {
         let source_tasks = source_tasks.await?;
         let destination_tasks = destination_tasks.await?;
 
-        let mut role_id_hashmap = HashMap::new();
+        let mut hashmap = HashMap::new();
 
         for source_task in source_tasks {
             if let Some(destination_task) = destination_tasks.iter().find(|destination_task| {
                 destination_task.name.to_lowercase() == source_task.name.to_lowercase()
             }) {
-                role_id_hashmap.insert(source_task.id.clone(), destination_task.id.clone());
+                hashmap.insert(source_task.id.clone(), destination_task.id.clone());
             }
         }
 
-        Ok(role_id_hashmap)
+        Ok(hashmap)
+    }
+
+    pub async fn get_application_hashmap(
+        &self,
+    ) -> Result<HashMap<String, String>, SwimlaneMigratorError> {
+        let source_applications = self.from.get_applications_light();
+        let destination_applications = self.to.get_applications_light();
+
+        let source_applications = source_applications.await?;
+        let destination_applications = destination_applications.await?;
+
+        let mut hashmap = HashMap::new();
+
+        for source_application in source_applications {
+            if let Some(destination_application) =
+                destination_applications
+                    .iter()
+                    .find(|destination_application| {
+                        destination_application.name.to_lowercase()
+                            == source_application.name.to_lowercase()
+                    })
+            {
+                hashmap.insert(
+                    source_application.id.clone(),
+                    destination_application.id.clone(),
+                );
+            }
+        }
+
+        Ok(hashmap)
     }
 
     pub async fn migrate_groups(&self) -> Result<(), SwimlaneMigratorError> {

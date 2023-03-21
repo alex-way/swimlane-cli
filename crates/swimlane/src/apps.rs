@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::tasks::Task;
 use crate::{SwimlaneClient, SwimlaneClientError};
 
@@ -30,21 +28,5 @@ impl SwimlaneClient {
         let url = format!("{}/api/task?parentId={}", self.base_url, application_id);
         let tasks: Vec<Task> = self.http_client.get(url).send().await?.json().await?;
         Ok(tasks)
-    }
-
-    // todo: move this to the migrator crate
-    pub async fn get_application_hashmap(
-        &self,
-    ) -> Result<HashMap<String, String>, SwimlaneClientError> {
-        let applications = self.get_applications_light().await?;
-
-        let mut hashmap = HashMap::new();
-
-        for application in applications {
-            hashmap.insert(application.name.clone(), application.id.clone());
-            hashmap.insert(application.id.clone(), application.name.clone());
-        }
-
-        Ok(hashmap)
     }
 }

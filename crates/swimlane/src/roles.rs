@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::users::UserGroupSelection;
-use crate::util::PagedResponse;
 use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
 use serde::{Deserialize, Serialize};
 
@@ -67,10 +66,6 @@ pub struct Role {
 impl SwimlaneClient {
     pub async fn get_roles(&self) -> Result<Vec<Role>, SwimlaneClientError> {
         let url = format!("{}/api/roles/", self.base_url);
-        let response = self.http_client.get(&url).send().await?;
-
-        // todo: recusively loop through all users until there's no more users
-        let roles: PagedResponse<Role> = response.json().await?;
-        Ok(roles.items)
+        self.get_paginated_items::<Role>(&url).await
     }
 }

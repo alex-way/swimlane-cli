@@ -1,6 +1,7 @@
 use serde::Deserialize;
 
-use crate::error::UploadRequirementsError;
+use crate::error::{SwimlaneClientError, UploadRequirementsError};
+use crate::SwimlaneClient;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -55,4 +56,43 @@ pub struct PagedResponse<T> {
     #[serde(rename = "totalCount")]
     pub total_count: usize,
     pub items: Vec<T>,
+}
+
+impl SwimlaneClient {
+    pub async fn get_paginated_items<T>(&self, url: &str) -> Result<Vec<T>, SwimlaneClientError>
+    where
+        T: for<'de> Deserialize<'de> + Clone,
+    {
+        const MAX_ITEMS_PER_PAGE: usize = 100;
+        let mut page_number = 1;
+
+        let mut items: Vec<T> = Vec::new();
+
+        loop {
+            let response = self
+                .http_client
+                .get(url)
+                .query(&[
+                    ("page_size", MAX_ITEMS_PER_PAGE),
+                    ("page_number", page_number),
+                ])
+                .send()
+                .await?;
+
+            let payload: PagedResponse<T> = response.json().await?;
+
+            payload
+                .items
+                .clone()
+                .into_iter()
+                .for_each(|item| items.push(item));
+
+            if payload.items.len() < MAX_ITEMS_PER_PAGE {
+                break;
+            }
+
+            page_number += 1;
+        }
+        Ok(items)
+    }
 }
