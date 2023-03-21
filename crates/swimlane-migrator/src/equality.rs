@@ -6,7 +6,7 @@ pub trait LooksLike {
     /// Whether the main fields of the two objects are identical
     /// For example,
     ///
-    /// ```
+    /// ```rust
     /// use swimlane_migrator::equality::LooksLike;
     ///
     /// struct User {
