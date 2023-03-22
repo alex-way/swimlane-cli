@@ -27,7 +27,9 @@ impl SwimlaneClient {
     pub async fn get_installed_pip_packages(&self) -> Result<Vec<PipPackage>, SwimlaneClientError> {
         let url = format!("{}/api/pip/packages/3", self.base_url);
         let packages: Vec<PipPackage> = self.http_client.get(url).send().await?.json().await?;
-        // todo: make name, version lowercase
+
+        // todo: Force the package name and version to be lowercase to avoid issues with case sensitivity
+
         Ok(packages)
     }
 
