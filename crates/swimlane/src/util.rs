@@ -72,22 +72,17 @@ impl SwimlaneClient {
             let response = self
                 .http_client
                 .get(url)
-                .query(&[
-                    ("page_size", MAX_ITEMS_PER_PAGE),
-                    ("page_number", page_number),
-                ])
+                .query(&[("size", MAX_ITEMS_PER_PAGE), ("pageNumber", page_number)])
                 .send()
                 .await?;
 
             let payload: PagedResponse<T> = response.json().await?;
 
-            payload
-                .items
-                .clone()
-                .into_iter()
-                .for_each(|item| items.push(item));
+            let payload_length = payload.items.len();
 
-            if payload.items.len() < MAX_ITEMS_PER_PAGE {
+            items.extend(payload.items);
+
+            if payload_length < MAX_ITEMS_PER_PAGE {
                 break;
             }
 
