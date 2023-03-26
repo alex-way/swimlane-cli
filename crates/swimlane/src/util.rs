@@ -64,7 +64,8 @@ impl SwimlaneClient {
         T: for<'de> Deserialize<'de> + Clone,
     {
         const MAX_ITEMS_PER_PAGE: usize = 100;
-        let mut page_number = 1;
+        // Weirdly page numbers are 0 indexed
+        let mut page_number = 0;
 
         let mut items: Vec<T> = Vec::new();
 

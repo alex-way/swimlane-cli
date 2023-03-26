@@ -42,22 +42,9 @@ pub enum MigrationPlan<T: LooksLike> {
         destination_resource: T,
     },
     Delete {
-        // Currently it's not possible for there to be a delete action as logically it's not possible to delete something
-        // that doesn't exist. However, this may change in the future. Hence leaving this here.
         destination_resource: T,
     },
 }
-
-// todo: turn the differences into a method which can be called on this struct
-// impl MigrationPlan {
-//     pub fn differences(&self) -> String {
-//         match self {
-//             MigrationPlan::Create { .. } => "create".to_string(),
-//             MigrationPlan::Update { .. } => "update".to_string(),
-//             MigrationPlan::Delete { .. } => "delete".to_string(),
-//         }
-//     }
-// }
 
 impl SwimlaneMigrator {
     pub fn new(

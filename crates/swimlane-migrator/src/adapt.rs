@@ -1,8 +1,3 @@
-use std::collections::HashMap;
-
-use swimlane::groups::Group;
-
-use crate::SwimlaneMigrator;
 // use swimlane::users::User;
 
 // pub trait Adapt {
@@ -46,31 +41,3 @@ use crate::SwimlaneMigrator;
 //         }
 //     }
 // }
-
-impl SwimlaneMigrator {
-    pub async fn adapt_group(
-        &self,
-        group: &mut Group,
-        group_id_hashmap: &HashMap<String, String>,
-        user_id_hashmap: &HashMap<String, String>,
-        role_id_hashmap: &HashMap<String, String>,
-    ) {
-        for user in &mut group.users {
-            if let Some(new_id) = user_id_hashmap.get(&user.id) {
-                user.id = new_id.clone();
-            }
-        }
-
-        for role in &mut group.roles {
-            if let Some(new_id) = role_id_hashmap.get(&role.id) {
-                role.id = new_id.clone();
-            }
-        }
-
-        for child_group in &mut group.groups {
-            if let Some(new_id) = group_id_hashmap.get(&child_group.id) {
-                child_group.id = new_id.clone();
-            }
-        }
-    }
-}

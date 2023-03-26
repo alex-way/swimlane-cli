@@ -1,6 +1,8 @@
-use crate::{SwimlaneMigrator, SwimlaneMigratorError};
+use swimlane::error::SwimlaneClientError;
 
-use std::collections::HashMap;
+use crate::{equality::LooksLike, MigrationPlan, SwimlaneMigrator, SwimlaneMigratorError};
+
+use std::{collections::HashMap, future::Future};
 
 impl SwimlaneMigrator {
     /// Returns a hashmap of id to id for all groups present in both the source and destination systems
@@ -120,5 +122,40 @@ impl SwimlaneMigrator {
         }
 
         Ok(hashmap)
+    }
+
+    pub async fn get_resources_to_migrate<T: LooksLike + Clone, FutSrc, FutDest>(
+        &self,
+        source_resource_getter: FutSrc,
+        destination_resource_getter: FutDest,
+    ) -> Result<Vec<MigrationPlan<T>>, SwimlaneMigratorError>
+    where
+        FutSrc: Future<Output = Result<Vec<T>, SwimlaneClientError>>,
+        FutDest: Future<Output = Result<Vec<T>, SwimlaneClientError>>,
+    {
+        let source_resources = source_resource_getter.await?;
+        let destination_resources = destination_resource_getter.await?;
+
+        let mut resources_to_migrate = vec![];
+
+        for source_resource in source_resources {
+            if let Some(destination_resource) =
+                destination_resources.iter().find(|destination_resource| {
+                    destination_resource.is_same_resource(&source_resource)
+                })
+            {
+                if source_resource.looks_like(destination_resource) {
+                    continue;
+                }
+                resources_to_migrate.push(MigrationPlan::Update {
+                    source_resource,
+                    destination_resource: destination_resource.clone(),
+                });
+            } else {
+                resources_to_migrate.push(MigrationPlan::Create { source_resource });
+            }
+        }
+
+        Ok(resources_to_migrate)
     }
 }

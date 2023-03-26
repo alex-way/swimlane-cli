@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::users::UserGroupSelection;
 use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
 
@@ -23,6 +25,12 @@ pub struct Group {
     pub created_by_user: UserGroupSelection,
     #[serde(rename = "modifiedByUser")]
     pub modified_by_user: UserGroupSelection,
+}
+
+impl Display for Group {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Group: {}", self.name)
+    }
 }
 
 impl SwimlaneClient {

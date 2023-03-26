@@ -1,8 +1,9 @@
 use crate::error::SwimlaneCliError;
 use crate::Migrate;
-use colored::Colorize;
 use swimlane::SwimlaneClient;
-use swimlane_migrator::{MigrationPlan, SwimlaneMigrator};
+use swimlane_migrator::SwimlaneMigrator;
+
+use super::migrate::dry_run_resource_migrate;
 
 pub async fn remove_python_package(
     swimlane_client: &SwimlaneClient,
@@ -35,49 +36,15 @@ pub async fn handle_migrate(
 
     let migrator = SwimlaneMigrator::new(swimlane_client, destination_swimlane_client, dry_run)?;
 
+    if dry_run {
+        println!("Dry run enabled, no changes will be made");
+    }
+
     match migration_type {
         Migrate::Users {} => match dry_run {
             true => {
-                println!("Dry run enabled, no changes will be made");
                 let users = migrator.get_users_to_migrate().await?;
-
-                if users.is_empty() {
-                    println!(
-                        "{}",
-                        "No changed detected. Everything is up to date.".green()
-                    );
-                }
-
-                // todo: order by type of change (create, update, delete)
-                // todo: Extract into trait on Vec<MigrationPlan>
-                for user in users {
-                    match user {
-                        MigrationPlan::Create { source_resource } => {
-                            println!(
-                                "{}",
-                                format!("User: {} will be created", source_resource.name).green()
-                            );
-                        }
-                        MigrationPlan::Update {
-                            source_resource,
-                            destination_resource: _,
-                        } => {
-                            println!(
-                                "{}",
-                                format!("User: {} will be updated", source_resource.name).yellow()
-                            )
-                        }
-                        MigrationPlan::Delete {
-                            destination_resource,
-                        } => {
-                            println!(
-                                "{}",
-                                format!("User: {} will be deleted", destination_resource.name)
-                                    .red()
-                            )
-                        }
-                    }
-                }
+                dry_run_resource_migrate(users);
             }
             false => migrator.migrate_users().await?,
         },
@@ -86,46 +53,8 @@ pub async fn handle_migrate(
         }
         Migrate::Groups {} => match dry_run {
             true => {
-                println!("Dry run enabled, no changes will be made");
                 let groups = migrator.get_groups_to_migrate().await?;
-
-                if groups.is_empty() {
-                    println!(
-                        "{}",
-                        "No changed detected. Everything is up to date.".green()
-                    );
-                }
-
-                // todo: order by type of change (create, update, delete)
-                // todo: Extract into trait on Vec<MigrationPlan>
-                for group in groups {
-                    match group {
-                        MigrationPlan::Create { source_resource } => {
-                            println!(
-                                "{}",
-                                format!("Group: {} will be created", source_resource.name).green()
-                            );
-                        }
-                        MigrationPlan::Update {
-                            source_resource,
-                            destination_resource: _,
-                        } => {
-                            println!(
-                                "{}",
-                                format!("Group: {} will be updated", source_resource.name).yellow()
-                            )
-                        }
-                        MigrationPlan::Delete {
-                            destination_resource,
-                        } => {
-                            println!(
-                                "{}",
-                                format!("Group: {} will be deleted", destination_resource.name)
-                                    .red()
-                            )
-                        }
-                    }
-                }
+                dry_run_resource_migrate(groups);
             }
             false => migrator.migrate_groups().await?,
         },
@@ -134,48 +63,10 @@ pub async fn handle_migrate(
         }
         Migrate::Roles {} => match dry_run {
             true => {
-                println!("Dry run enabled, no changes will be made");
                 let roles = migrator.get_roles_to_migrate().await?;
-
-                if roles.is_empty() {
-                    println!(
-                        "{}",
-                        "No changed detected. Everything is up to date.".green()
-                    );
-                }
-
-                // todo: order by type of change (create, update, delete)
-                // todo: Extract into trait on Vec<MigrationPlan>
-                for role in roles {
-                    match role {
-                        MigrationPlan::Create { source_resource } => {
-                            println!(
-                                "{}",
-                                format!("Role: {} will be created", source_resource.name).green()
-                            );
-                        }
-                        MigrationPlan::Update {
-                            source_resource,
-                            destination_resource: _,
-                        } => {
-                            println!(
-                                "{}",
-                                format!("Role: {} will be updated", source_resource.name).yellow()
-                            );
-                        }
-                        MigrationPlan::Delete {
-                            destination_resource,
-                        } => {
-                            println!(
-                                "{}",
-                                format!("Role: {} will be deleted", destination_resource.name)
-                                    .red()
-                            );
-                        }
-                    }
-                }
+                dry_run_resource_migrate(roles);
             }
-            false => migrator.migrate_groups().await?,
+            false => migrator.migrate_roles().await?,
         },
         Migrate::Role { role_id: _ } => {
             todo!();

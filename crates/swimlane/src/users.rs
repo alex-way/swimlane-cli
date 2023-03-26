@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::{SwimlaneClient, SwimlaneClientError};
 
 use serde::{Deserialize, Serialize};
@@ -16,6 +18,12 @@ pub struct User {
     #[serde(rename = "displayName")]
     pub display_name: Option<String>,
     pub disabled: bool,
+}
+
+impl Display for User {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "User: {}", self.user_name)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

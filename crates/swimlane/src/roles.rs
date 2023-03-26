@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
 use crate::users::UserGroupSelection;
 use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
@@ -61,6 +62,12 @@ pub struct Role {
     pub groups: Vec<BaseEntity>,
     pub roles: Option<Vec<BaseEntity>>,
     pub users: Vec<BaseEntity>,
+}
+
+impl Display for Role {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Role: {}", self.name)
+    }
 }
 
 impl SwimlaneClient {

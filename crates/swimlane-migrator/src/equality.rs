@@ -1,8 +1,44 @@
-use swimlane::groups::Group;
-use swimlane::roles::Role;
-use swimlane::users::User;
+use std::fmt::{Display, Formatter};
+
+use swimlane::BaseEntity;
+
+pub enum Difference {
+    UpdatingField {
+        field: String,
+        current_value: String,
+        new_value: String,
+    },
+    AddingItem {
+        field: String,
+        item: String,
+    },
+    RemovingItem {
+        field: String,
+        item: String,
+    },
+}
+
+impl Display for Difference {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Difference::UpdatingField {
+                field,
+                current_value,
+                new_value,
+            } => write!(f, "{}: {} -> {}", field, new_value, current_value),
+            Difference::AddingItem { field, item } => {
+                write!(f, "+{}: {}", field, item)
+            }
+            Difference::RemovingItem { field, item } => {
+                write!(f, "-{}: {}", field, item)
+            }
+        }
+    }
+}
 
 pub trait LooksLike {
+    fn differences(&self, other: &Self) -> Vec<Difference>;
+
     /// Whether the main fields of the two objects are identical
     /// For example,
     ///
@@ -37,33 +73,40 @@ pub trait LooksLike {
     /// Notice that the id is different, but the user_name is the same.
     /// This is because the user_name is the main field that we care about.
     /// The id is just a unique identifier.
-    fn looks_like(&self, other: &Self) -> bool;
-
-    // todo: implement a differences function that returns a list of differences and create default implementation for
-    // looks_like that checks if the differences list is empty
-}
-
-impl LooksLike for Group {
     fn looks_like(&self, other: &Self) -> bool {
-        // todo: compare group membership, role membership, users
-        self.description == other.description && self.disabled == other.disabled
+        self.differences(other).is_empty()
     }
+
+    fn is_same_resource(&self, other: &Self) -> bool;
 }
 
-impl LooksLike for User {
-    fn looks_like(&self, other: &Self) -> bool {
-        // todo: compare group membership, role membership, primary group, phone, time zone, default dashboard, profile image, middle initial
-        self.display_name == other.display_name
-            && self.disabled == other.disabled
-            && self.email == other.email
-            && self.first_name == other.first_name
-            && self.last_name == other.last_name
+impl LooksLike for BaseEntity {
+    fn differences(&self, other: &Self) -> Vec<Difference> {
+        let mut differences = vec![];
+        if self.name != other.name {
+            differences.push(Difference::UpdatingField {
+                field: "name".to_string(),
+                current_value: self.name.clone(),
+                new_value: other.name.clone(),
+            });
+        }
+        if self.disabled != other.disabled {
+            differences.push(Difference::UpdatingField {
+                field: "disabled".to_string(),
+                current_value: self.disabled.to_string(),
+                new_value: other.disabled.to_string(),
+            });
+        }
+        differences
     }
-}
 
-impl LooksLike for Role {
     fn looks_like(&self, other: &Self) -> bool {
-        // todo: compare group membership, role membership, permissions
-        self.disabled == other.disabled && self.description == other.description
+        // disabled is omitted because it's uncontrollable from the BaseEntity. The property has to be set on the
+        // specific entity type (User, Group, Role)
+        self.name == other.name
+    }
+
+    fn is_same_resource(&self, other: &Self) -> bool {
+        self.name == other.name
     }
 }

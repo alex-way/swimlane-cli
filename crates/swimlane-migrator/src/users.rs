@@ -1,37 +1,95 @@
-use crate::equality::LooksLike;
+use crate::equality::{Difference, LooksLike};
 use crate::{MigrationPlan, SwimlaneMigrator, SwimlaneMigratorError};
+use swimlane::users::User;
+
+impl LooksLike for User {
+    fn differences(&self, other: &Self) -> Vec<Difference> {
+        let mut differences = vec![];
+
+        if self.display_name != other.display_name {
+            differences.push(Difference::UpdatingField {
+                field: "display_name".to_string(),
+                current_value: match &self.display_name {
+                    Some(display_name) => display_name.clone(),
+                    None => "".to_string(),
+                },
+                new_value: match &other.display_name {
+                    Some(display_name) => display_name.clone(),
+                    None => "".to_string(),
+                },
+            });
+        }
+
+        if self.disabled != other.disabled {
+            differences.push(Difference::UpdatingField {
+                field: "disabled".to_string(),
+                current_value: self.disabled.to_string(),
+                new_value: other.disabled.to_string(),
+            });
+        }
+
+        if self.email != other.email {
+            differences.push(Difference::UpdatingField {
+                field: "email".to_string(),
+                current_value: self.email.clone(),
+                new_value: other.email.clone(),
+            });
+        }
+
+        if self.first_name != other.first_name {
+            differences.push(Difference::UpdatingField {
+                field: "first_name".to_string(),
+                current_value: match &self.first_name {
+                    Some(first_name) => first_name.clone(),
+                    None => "".to_string(),
+                },
+                new_value: match &other.first_name {
+                    Some(first_name) => first_name.clone(),
+                    None => "".to_string(),
+                },
+            });
+        }
+
+        if self.last_name != other.last_name {
+            differences.push(Difference::UpdatingField {
+                field: "last_name".to_string(),
+                current_value: match &self.last_name {
+                    Some(last_name) => last_name.clone(),
+                    None => "".to_string(),
+                },
+                new_value: match &other.last_name {
+                    Some(last_name) => last_name.clone(),
+                    None => "".to_string(),
+                },
+            });
+        }
+
+        differences
+    }
+
+    fn is_same_resource(&self, other: &Self) -> bool {
+        self.user_name == other.user_name
+    }
+
+    // fn looks_like(&self, other: &Self) -> bool {
+    //     // todo: compare group membership, role membership, primary group, phone, time zone, default dashboard, profile image, middle initial
+    //     self.display_name == other.display_name
+    //         && self.disabled == other.disabled
+    //         && self.email == other.email
+    //         && self.first_name == other.first_name
+    //         && self.last_name == other.last_name
+    // }
+}
 
 impl SwimlaneMigrator {
     pub async fn get_users_to_migrate(
         &self,
-    ) -> Result<Vec<MigrationPlan<swimlane::users::User>>, SwimlaneMigratorError> {
-        let source_users = self.from.get_users();
-        let destination_users = self.to.get_users();
+    ) -> Result<Vec<MigrationPlan<User>>, SwimlaneMigratorError> {
+        let source_users_future = self.from.get_users();
+        let destination_users_future = self.to.get_users();
 
-        let source_users = source_users.await?;
-        let destination_users = destination_users.await?;
-
-        let mut users_to_migrate = vec![];
-
-        for source_user in source_users {
-            if let Some(_destination_user) = destination_users.iter().find(|destination_user| {
-                destination_user.user_name.to_lowercase() == source_user.user_name.to_lowercase()
-            }) {
-                if source_user.looks_like(_destination_user) {
-                    continue;
-                }
-                users_to_migrate.push(MigrationPlan::Update {
-                    source_resource: source_user,
-                    destination_resource: _destination_user.clone(),
-                });
-            } else {
-                users_to_migrate.push(MigrationPlan::Create {
-                    source_resource: source_user,
-                });
-            }
-        }
-
-        Ok(users_to_migrate)
+        self.get_resources_to_migrate(source_users_future, destination_users_future)
+            .await
     }
 
     // todo: add argument to auto-create missing groups, roles, apps, dashboards

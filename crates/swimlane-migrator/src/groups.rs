@@ -1,38 +1,150 @@
-use crate::equality::LooksLike;
+use crate::equality::{Difference, LooksLike};
 use crate::{MigrationPlan, SwimlaneMigrator, SwimlaneMigratorError};
+
+use std::collections::HashMap;
+use swimlane::groups::Group;
+
+impl LooksLike for Group {
+    fn differences(&self, other: &Self) -> Vec<Difference> {
+        let mut differences = vec![];
+
+        if self.name != other.name {
+            // Add warning if the name is different
+            differences.push(Difference::UpdatingField {
+                field: "name".to_string(),
+                current_value: self.name.clone(),
+                new_value: other.name.clone(),
+            });
+        }
+
+        if self.description != other.description {
+            differences.push(Difference::UpdatingField {
+                field: "description".to_string(),
+                current_value: match &self.description {
+                    Some(description) => description.clone(),
+                    None => "".to_string(),
+                },
+                new_value: match &other.description {
+                    Some(description) => description.clone(),
+                    None => "".to_string(),
+                },
+            });
+        }
+        // for each user, if they aren't in the other group, add a difference saying that they will be added
+        // if they are in the other group, dont do anything
+        // if the other group has a user which isn't in this group then add a difference saying they'll be removed
+        differences.extend(self.users.iter().filter_map(|user| {
+            let other_user_exists = other
+                .users
+                .iter()
+                .find(|other_user| user.looks_like(other_user));
+            match other_user_exists {
+                Some(_) => None,
+                None => Some(Difference::AddingItem {
+                    field: "users".to_string(),
+                    item: user.name.clone(),
+                }),
+            }
+        }));
+
+        differences.extend(other.users.iter().filter_map(|user| {
+            let user_exists = self
+                .users
+                .iter()
+                .find(|other_user| user.looks_like(other_user));
+            match user_exists {
+                Some(_) => None,
+                None => Some(Difference::RemovingItem {
+                    field: "users".to_string(),
+                    item: user.name.clone(),
+                }),
+            }
+        }));
+
+        // let users_differences = self.users.iter().filter_map(|user| {
+        //     other
+        //         .users
+        //         .iter()
+        //         .find(|other_user| user.looks_like(other_user))
+        //         .map(|other_user| Difference {
+        //             field: format!("users[{}]", user.name),
+        //             expected: user.name.clone(),
+        //             actual: other_user.name.clone(),
+        //         })
+        // });
+
+        // modify the field to be in the format of "users[<user_name>].name"
+
+        let groups_differences = self.groups.iter().filter_map(|group| {
+            other
+                .groups
+                .iter()
+                .find(|other_group| group.looks_like(other_group))
+                .map(|other_group| group.differences(other_group))
+        });
+
+        let roles_differences = self.roles.iter().filter_map(|role| {
+            other
+                .roles
+                .iter()
+                .find(|other_role| role.looks_like(other_role))
+                .map(|other_role| role.differences(other_role))
+        });
+
+        // differences.extend(users_differences.flatten());
+        differences.extend(groups_differences.flatten());
+        differences.extend(roles_differences.flatten());
+
+        differences
+    }
+
+    fn is_same_resource(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
 
 impl SwimlaneMigrator {
     pub async fn get_groups_to_migrate(
         &self,
-    ) -> Result<Vec<MigrationPlan<swimlane::groups::Group>>, SwimlaneMigratorError> {
-        let source_groups = self.from.get_groups();
-        let destination_groups = self.to.get_groups();
+    ) -> Result<Vec<MigrationPlan<Group>>, SwimlaneMigratorError> {
+        let source_groups_future = self.from.get_groups();
+        let destination_groups_future = self.to.get_groups();
 
-        let source_groups = source_groups.await?;
-        let destination_groups = destination_groups.await?;
-
-        let mut groups_to_migrate = vec![];
-
-        for source_group in source_groups {
-            if let Some(_destination_group) = destination_groups.iter().find(|destination_group| {
-                destination_group.name.to_lowercase() == source_group.name.to_lowercase()
-            }) {
-                if source_group.looks_like(_destination_group) {
-                    continue;
-                }
-                groups_to_migrate.push(MigrationPlan::Update {
-                    source_resource: source_group,
-                    destination_resource: _destination_group.clone(),
-                });
-            } else {
-                groups_to_migrate.push(MigrationPlan::Create {
-                    source_resource: source_group,
-                });
-            }
-        }
-
-        Ok(groups_to_migrate)
+        self.get_resources_to_migrate(source_groups_future, destination_groups_future)
+            .await
     }
+
+    // Migrate group
+    // Create a placeholder group, with the fields which aren't dependent on other resources. I.e. name, description, etc.
+    // Then, create the nested groups, roles, and users
+    // async fn migrate_group(&self, group: &Group) -> Result<(), SwimlaneMigratorError> {
+    //     let mut group_to_create = group.clone();
+
+    //     let mut nested_groups = vec![];
+    //     for group in &mut group_to_create.groups {
+    //         let group = self.migrate_group(group).await?;
+    //         nested_groups.push(group);
+    //     }
+    //     group_to_create.groups = nested_groups;
+
+    //     let mut roles = vec![];
+    //     for role in &mut group_to_create.roles {
+    //         let role = self.migrate_role(role).await?;
+    //         roles.push(role);
+    //     }
+    //     group_to_create.roles = roles;
+
+    //     let mut users = vec![];
+    //     for user in &mut group_to_create.users {
+    //         let user = self.migrate_user(user).await?;
+    //         users.push(user);
+    //     }
+    //     group_to_create.users = users;
+
+    //     self.to.create_group(&group_to_create).await?;
+
+    //     Ok(())
+    // }
 
     pub async fn migrate_groups(&self) -> Result<(), SwimlaneMigratorError> {
         let groups_to_migrate = self.get_groups_to_migrate();
@@ -118,5 +230,69 @@ impl SwimlaneMigrator {
         }
 
         Ok(())
+    }
+
+    /// Adapts a group from a source system to a destination system
+    /// This is used to replace the ids of nested groups, roles, and users with the ids from the destination system
+    /// This is necessary because the ids of these resources are not guaranteed to be the same between systems
+    ///
+    /// Example:
+    ///
+    /// ```rust
+    /// use swimlane_migrator::SwimlaneMigrator;
+    /// use swimlane::groups::Group;
+    /// use std::collections::HashMap;
+    ///
+    /// let mut group = Group {
+    ///    id: "1234".to_string(),
+    ///   name: "Group 1".to_string(),
+    ///  groups: vec![Group {
+    ///    id: "5678".to_string(),
+    ///   name: "Group 2".to_string(),
+    /// groups: vec![],
+    /// roles: vec![],
+    /// users: vec![],
+    /// }],
+    /// roles: vec![],
+    /// users: vec![],
+    /// };
+    ///
+    /// let group_id_hashmap = HashMap::new();
+    /// group_id_hashmap.insert("5678".to_string(), "9012".to_string());
+    ///
+    /// let user_id_hashmap = HashMap::new();
+    ///
+    /// let role_id_hashmap = HashMap::new();
+    ///
+    /// let mut migrator = SwimlaneMigrator::new();
+    /// migrator.adapt_group(&mut group, &group_id_hashmap, &user_id_hashmap, &role_id_hashmap).await;
+    ///
+    /// assert_eq!(group.id, "1234");
+    /// assert_eq!(group.groups[0].id, "9012");
+    /// ```
+    pub async fn adapt_group(
+        &self,
+        group: &mut Group,
+        group_id_hashmap: &HashMap<String, String>,
+        user_id_hashmap: &HashMap<String, String>,
+        role_id_hashmap: &HashMap<String, String>,
+    ) {
+        for user in &mut group.users {
+            if let Some(new_id) = user_id_hashmap.get(&user.id) {
+                user.id = new_id.clone();
+            }
+        }
+
+        for role in &mut group.roles {
+            if let Some(new_id) = role_id_hashmap.get(&role.id) {
+                role.id = new_id.clone();
+            }
+        }
+
+        for child_group in &mut group.groups {
+            if let Some(new_id) = group_id_hashmap.get(&child_group.id) {
+                child_group.id = new_id.clone();
+            }
+        }
     }
 }
