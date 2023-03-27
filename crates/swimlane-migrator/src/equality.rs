@@ -18,6 +18,57 @@ pub enum Difference {
     },
 }
 
+macro_rules! push_difference {
+    // todo: make $field:literal a string only
+    ($differences:expr, $field:literal , $current_value:expr, $new_value:expr) => {
+        if $current_value != $new_value {
+            $differences.push(Difference::UpdatingField {
+                field: $field.to_string(),
+                current_value: $current_value.to_string(),
+                new_value: $new_value.to_string(),
+            });
+        }
+    };
+    ($differences:expr, $field:literal, $current_value:expr, $new_value:expr, optional: true) => {
+        if $current_value != $new_value {
+            $differences.push(Difference::UpdatingField {
+                field: $field.to_string(),
+                current_value: $current_value
+                    .clone()
+                    .map_or("".to_string(), |v| v.to_string()),
+                new_value: $new_value.clone().map_or("".to_string(), |v| v.to_string()),
+            });
+        }
+    };
+    // todo: annotate source_vec and target_vec to only allow iterators which implement LooksLike Trait
+    ($differences:expr, $field:literal, $source_vec:expr, $target_vec:expr, vec: true) => {
+        $differences.extend($source_vec.iter().filter_map(|item| {
+            let item_exists = $target_vec
+                .iter()
+                .find(|other_item| item.looks_like(other_item));
+            match item_exists {
+                Some(_) => None,
+                None => Some(Difference::AddingItem {
+                    field: $field.to_string(),
+                    item: item.name.clone(),
+                }),
+            }
+        }));
+        $differences.extend($target_vec.iter().filter_map(|item| {
+            let item_exists = $source_vec
+                .iter()
+                .find(|other_item| item.looks_like(other_item));
+            match item_exists {
+                Some(_) => None,
+                None => Some(Difference::RemovingItem {
+                    field: $field.to_string(),
+                    item: item.name.clone(),
+                }),
+            }
+        }));
+    };
+}
+
 impl Display for Difference {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -25,7 +76,7 @@ impl Display for Difference {
                 field,
                 current_value,
                 new_value,
-            } => write!(f, "{}: {} -> {}", field, new_value, current_value),
+            } => write!(f, "{}: '{}' -> '{}'", field, new_value, current_value),
             Difference::AddingItem { field, item } => {
                 write!(f, "+{}: {}", field, item)
             }

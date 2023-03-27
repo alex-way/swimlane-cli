@@ -7,137 +7,35 @@ use swimlane::users::{User, UserCreationRequest};
 
 impl LooksLike for User {
     fn differences(&self, other: &Self) -> Vec<Difference> {
-        let mut differences = vec![];
+        let mut diffs = vec![];
 
-        if self.display_name != other.display_name {
-            differences.push(Difference::UpdatingField {
-                field: "display_name".to_string(),
-                current_value: match &self.display_name {
-                    Some(display_name) => display_name.clone(),
-                    None => "".to_string(),
-                },
-                new_value: match &other.display_name {
-                    Some(display_name) => display_name.clone(),
-                    None => "".to_string(),
-                },
-            });
-        }
+        push_difference!(diffs, "display_name", &self.display_name, &other.display_name, optional: true);
+        push_difference!(diffs, "disabled", &self.disabled, &other.disabled);
+        // todo: Convert from ID to name somehow
+        push_difference!(diffs, "default_workspace_id", &self.default_workspace_id, &other.default_workspace_id, optional: true);
+        // todo: Convert from ID to name somehow
+        push_difference!(diffs, "default_dashboard_id", &self.default_dashboard_id, &other.default_dashboard_id, optional: true);
+        // todo: Reduce the migrationplan output for avatar as it's a base64encoded string.
+        push_difference!(diffs, "avatar", &self.avatar, &other.avatar, optional: true);
+        push_difference!(diffs, "timezone_id", &self.timezone_id, &other.timezone_id);
+        push_difference!(diffs, "email", &self.email, &other.email);
+        push_difference!(diffs, "phone_number", &self.phone_number, &other.phone_number, optional: true);
+        push_difference!(diffs, "first_name", &self.first_name, &other.first_name, optional: true);
+        push_difference!(diffs, "middle_initial", &self.middle_initial, &other.middle_initial, optional: true);
+        push_difference!(diffs, "last_name", &self.last_name, &other.last_name, optional: true);
+        push_difference!(diffs, "roles", &self.roles, &other.roles, vec: true);
+        push_difference!(diffs, "groups", &self.groups, &other.groups, vec: true);
 
-        if self.disabled != other.disabled {
-            differences.push(Difference::UpdatingField {
-                field: "disabled".to_string(),
-                current_value: self.disabled.to_string(),
-                new_value: other.disabled.to_string(),
-            });
-        }
+        // todo: compare primary_group, default_dashboard
+        // push_difference!(
+        //     differences,
+        //     "primary_group",
+        //     &self.primary_group,
+        //     &other.primary_group,
+        //     optional: true
+        // );
 
-        if self.email != other.email {
-            differences.push(Difference::UpdatingField {
-                field: "email".to_string(),
-                current_value: self.email.clone(),
-                new_value: other.email.clone(),
-            });
-        }
-
-        if self.first_name != other.first_name {
-            differences.push(Difference::UpdatingField {
-                field: "first_name".to_string(),
-                current_value: match &self.first_name {
-                    Some(first_name) => first_name.clone(),
-                    None => "".to_string(),
-                },
-                new_value: match &other.first_name {
-                    Some(first_name) => first_name.clone(),
-                    None => "".to_string(),
-                },
-            });
-        }
-
-        if self.middle_initial != other.middle_initial {
-            differences.push(Difference::UpdatingField {
-                field: "middle_initial".to_string(),
-                current_value: match &self.middle_initial {
-                    Some(middle_initial) => middle_initial.clone(),
-                    None => "".to_string(),
-                },
-                new_value: match &other.middle_initial {
-                    Some(middle_initial) => middle_initial.clone(),
-                    None => "".to_string(),
-                },
-            });
-        }
-
-        if self.last_name != other.last_name {
-            differences.push(Difference::UpdatingField {
-                field: "last_name".to_string(),
-                current_value: match &self.last_name {
-                    Some(last_name) => last_name.clone(),
-                    None => "".to_string(),
-                },
-                new_value: match &other.last_name {
-                    Some(last_name) => last_name.clone(),
-                    None => "".to_string(),
-                },
-            });
-        }
-
-        differences.extend(self.roles.iter().filter_map(|role| {
-            let other_role_exists = other
-                .roles
-                .iter()
-                .find(|other_role| role.looks_like(other_role));
-            match other_role_exists {
-                Some(_) => None,
-                None => Some(Difference::AddingItem {
-                    field: "roles".to_string(),
-                    item: role.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(other.roles.iter().filter_map(|role| {
-            let role_exists = self
-                .roles
-                .iter()
-                .find(|other_role| role.looks_like(other_role));
-            match role_exists {
-                Some(_) => None,
-                None => Some(Difference::RemovingItem {
-                    field: "roles".to_string(),
-                    item: role.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(self.groups.iter().filter_map(|group| {
-            let other_group_exists = other
-                .groups
-                .iter()
-                .find(|other_group| group.looks_like(other_group));
-            match other_group_exists {
-                Some(_) => None,
-                None => Some(Difference::AddingItem {
-                    field: "groups".to_string(),
-                    item: group.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(other.groups.iter().filter_map(|group| {
-            let group_exists = self
-                .groups
-                .iter()
-                .find(|other_group| group.looks_like(other_group));
-            match group_exists {
-                Some(_) => None,
-                None => Some(Difference::RemovingItem {
-                    field: "groups".to_string(),
-                    item: group.name.clone(),
-                }),
-            }
-        }));
-
-        differences
+        diffs
     }
 
     fn is_same_resource(&self, other: &Self) -> bool {
@@ -219,6 +117,7 @@ impl SwimlaneMigrator {
         group_id_hashmap: &HashMap<String, String>,
         role_id_hashmap: &HashMap<String, String>,
     ) {
+        // todo: handle default_workspace_id, default_dashboard_id
         for role in &mut user.roles {
             if let Some(new_id) = role_id_hashmap.get(&role.id) {
                 role.id = new_id.clone();

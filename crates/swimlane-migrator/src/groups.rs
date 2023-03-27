@@ -9,114 +9,13 @@ impl LooksLike for Group {
     fn differences(&self, other: &Self) -> Vec<Difference> {
         let mut differences = vec![];
 
-        if self.name != other.name {
-            // Add warning if the name is different
-            differences.push(Difference::UpdatingField {
-                field: "name".to_string(),
-                current_value: self.name.clone(),
-                new_value: other.name.clone(),
-            });
-        }
-
-        if self.description != other.description {
-            differences.push(Difference::UpdatingField {
-                field: "description".to_string(),
-                current_value: match &self.description {
-                    Some(description) => description.clone(),
-                    None => "".to_string(),
-                },
-                new_value: match &other.description {
-                    Some(description) => description.clone(),
-                    None => "".to_string(),
-                },
-            });
-        }
-        // for each user, if they aren't in the other group, add a difference saying that they will be added
-        // if they are in the other group, dont do anything
-        // if the other group has a user which isn't in this group then add a difference saying they'll be removed
-        differences.extend(self.users.iter().filter_map(|user| {
-            let other_user_exists = other
-                .users
-                .iter()
-                .find(|other_user| user.looks_like(other_user));
-            match other_user_exists {
-                Some(_) => None,
-                None => Some(Difference::AddingItem {
-                    field: "users".to_string(),
-                    item: user.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(other.users.iter().filter_map(|user| {
-            let user_exists = self
-                .users
-                .iter()
-                .find(|other_user| user.looks_like(other_user));
-            match user_exists {
-                Some(_) => None,
-                None => Some(Difference::RemovingItem {
-                    field: "users".to_string(),
-                    item: user.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(self.groups.iter().filter_map(|group| {
-            let other_group_exists = other
-                .groups
-                .iter()
-                .find(|other_group| group.looks_like(other_group));
-            match other_group_exists {
-                Some(_) => None,
-                None => Some(Difference::AddingItem {
-                    field: "groups".to_string(),
-                    item: group.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(other.groups.iter().filter_map(|group| {
-            let group_exists = self
-                .groups
-                .iter()
-                .find(|other_group| group.looks_like(other_group));
-            match group_exists {
-                Some(_) => None,
-                None => Some(Difference::RemovingItem {
-                    field: "groups".to_string(),
-                    item: group.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(self.roles.iter().filter_map(|role| {
-            let other_role_exists = other
-                .roles
-                .iter()
-                .find(|other_role| role.looks_like(other_role));
-            match other_role_exists {
-                Some(_) => None,
-                None => Some(Difference::AddingItem {
-                    field: "roles".to_string(),
-                    item: role.name.clone(),
-                }),
-            }
-        }));
-
-        differences.extend(other.roles.iter().filter_map(|role| {
-            let role_exists = self
-                .roles
-                .iter()
-                .find(|other_role| role.looks_like(other_role));
-            match role_exists {
-                Some(_) => None,
-                None => Some(Difference::RemovingItem {
-                    field: "roles".to_string(),
-                    item: role.name.clone(),
-                }),
-            }
-        }));
+        // Add warning if the name is different
+        push_difference!(differences, "name", &self.name, &other.name);
+        push_difference!(differences, "disabled", &self.disabled, &other.disabled);
+        push_difference!(differences, "description", &self.description, &other.description, optional: true);
+        push_difference!(differences, "users", &self.users, &other.users, vec: true);
+        push_difference!(differences, "roles", &self.roles, &other.roles, vec: true);
+        push_difference!(differences, "groups", &self.groups, &other.groups, vec: true);
 
         differences
     }

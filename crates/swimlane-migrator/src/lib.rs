@@ -1,4 +1,5 @@
 mod adapt;
+#[macro_use]
 pub mod equality;
 pub mod groups;
 pub mod roles;

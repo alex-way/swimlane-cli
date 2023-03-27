@@ -81,7 +81,7 @@ pub struct User {
     pub domain: Option<String>,
     pub avatar: Option<String>,
     #[serde(rename = "defaultWorkspaceId")]
-    pub defaul_workspace_id: Option<String>,
+    pub default_workspace_id: Option<String>,
     #[serde(rename = "defaultDashboardId")]
     pub default_dashboard_id: Option<String>,
 }

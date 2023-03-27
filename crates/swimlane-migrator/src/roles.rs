@@ -7,27 +7,11 @@ impl LooksLike for Role {
     fn differences(&self, other: &Self) -> Vec<Difference> {
         let mut differences = vec![];
 
-        if self.disabled != other.disabled {
-            differences.push(Difference::UpdatingField {
-                field: "disabled".to_string(),
-                current_value: self.disabled.to_string(),
-                new_value: other.disabled.to_string(),
-            });
-        }
-
-        if self.description != other.description {
-            differences.push(Difference::UpdatingField {
-                field: "description".to_string(),
-                current_value: match &self.description {
-                    Some(description) => description.clone(),
-                    None => "".to_string(),
-                },
-                new_value: match &other.description {
-                    Some(description) => description.clone(),
-                    None => "".to_string(),
-                },
-            });
-        }
+        // Add warning if the name is different
+        push_difference!(differences, "name", &self.name, &other.name);
+        push_difference!(differences, "disabled", &self.disabled, &other.disabled);
+        push_difference!(differences, "description", &self.description, &other.description, optional: true);
+        push_difference!(differences, "users", &self.users, &other.users, vec: true);
 
         differences
     }
