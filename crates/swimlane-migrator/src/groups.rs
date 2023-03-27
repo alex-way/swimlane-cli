@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use crate::equality::{Difference, LooksLike};
 use crate::{MigrationPlan, SwimlaneMigrator, SwimlaneMigratorError};
 
-use std::collections::HashMap;
 use swimlane::groups::Group;
 
 impl LooksLike for Group {
@@ -61,39 +62,61 @@ impl LooksLike for Group {
             }
         }));
 
-        // let users_differences = self.users.iter().filter_map(|user| {
-        //     other
-        //         .users
-        //         .iter()
-        //         .find(|other_user| user.looks_like(other_user))
-        //         .map(|other_user| Difference {
-        //             field: format!("users[{}]", user.name),
-        //             expected: user.name.clone(),
-        //             actual: other_user.name.clone(),
-        //         })
-        // });
-
-        // modify the field to be in the format of "users[<user_name>].name"
-
-        let groups_differences = self.groups.iter().filter_map(|group| {
-            other
+        differences.extend(self.groups.iter().filter_map(|group| {
+            let other_group_exists = other
                 .groups
                 .iter()
-                .find(|other_group| group.looks_like(other_group))
-                .map(|other_group| group.differences(other_group))
-        });
+                .find(|other_group| group.looks_like(other_group));
+            match other_group_exists {
+                Some(_) => None,
+                None => Some(Difference::AddingItem {
+                    field: "groups".to_string(),
+                    item: group.name.clone(),
+                }),
+            }
+        }));
 
-        let roles_differences = self.roles.iter().filter_map(|role| {
-            other
+        differences.extend(other.groups.iter().filter_map(|group| {
+            let group_exists = self
+                .groups
+                .iter()
+                .find(|other_group| group.looks_like(other_group));
+            match group_exists {
+                Some(_) => None,
+                None => Some(Difference::RemovingItem {
+                    field: "groups".to_string(),
+                    item: group.name.clone(),
+                }),
+            }
+        }));
+
+        differences.extend(self.roles.iter().filter_map(|role| {
+            let other_role_exists = other
                 .roles
                 .iter()
-                .find(|other_role| role.looks_like(other_role))
-                .map(|other_role| role.differences(other_role))
-        });
+                .find(|other_role| role.looks_like(other_role));
+            match other_role_exists {
+                Some(_) => None,
+                None => Some(Difference::AddingItem {
+                    field: "roles".to_string(),
+                    item: role.name.clone(),
+                }),
+            }
+        }));
 
-        // differences.extend(users_differences.flatten());
-        differences.extend(groups_differences.flatten());
-        differences.extend(roles_differences.flatten());
+        differences.extend(other.roles.iter().filter_map(|role| {
+            let role_exists = self
+                .roles
+                .iter()
+                .find(|other_role| role.looks_like(other_role));
+            match role_exists {
+                Some(_) => None,
+                None => Some(Difference::RemovingItem {
+                    field: "roles".to_string(),
+                    item: role.name.clone(),
+                }),
+            }
+        }));
 
         differences
     }

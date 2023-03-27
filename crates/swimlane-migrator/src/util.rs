@@ -138,7 +138,7 @@ impl SwimlaneMigrator {
 
         let mut resources_to_migrate = vec![];
 
-        for source_resource in source_resources {
+        for source_resource in source_resources.clone() {
             if let Some(destination_resource) =
                 destination_resources.iter().find(|destination_resource| {
                     destination_resource.is_same_resource(&source_resource)
@@ -153,6 +153,17 @@ impl SwimlaneMigrator {
                 });
             } else {
                 resources_to_migrate.push(MigrationPlan::Create { source_resource });
+            }
+        }
+
+        for destination_resource in destination_resources {
+            if !source_resources
+                .iter()
+                .any(|source_resource| source_resource.is_same_resource(&destination_resource))
+            {
+                resources_to_migrate.push(MigrationPlan::Delete {
+                    destination_resource,
+                });
             }
         }
 

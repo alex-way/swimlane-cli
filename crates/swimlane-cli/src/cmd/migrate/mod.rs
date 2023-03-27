@@ -17,6 +17,18 @@ pub fn dry_run_resource_migrate<T: LooksLike + Display>(plans: Vec<MigrationPlan
         }
 
         plans.iter().for_each(|plan| {
+            if let MigrationPlan::Delete {
+                destination_resource,
+            } = plan
+            {
+                println!(
+                    "{}",
+                    format!("{} will be deleted", destination_resource).red()
+                )
+            }
+        });
+
+        plans.iter().for_each(|plan| {
             if let MigrationPlan::Create { source_resource } = plan {
                 println!("{}", format!("{} will be created", source_resource).green())
             }
@@ -40,18 +52,6 @@ pub fn dry_run_resource_migrate<T: LooksLike + Display>(plans: Vec<MigrationPlan
                     };
                     println!("\t{}", format!("{}", difference).color(color));
                 }
-            }
-        });
-
-        plans.iter().for_each(|plan| {
-            if let MigrationPlan::Delete {
-                destination_resource,
-            } = plan
-            {
-                println!(
-                    "{}",
-                    format!("{} will be deleted", destination_resource).red()
-                )
             }
         });
     }

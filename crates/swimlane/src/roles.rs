@@ -3,9 +3,9 @@ use std::fmt::{Display, Formatter};
 
 use crate::users::UserGroupSelection;
 use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
-use serde::{Deserialize, Serialize};
 
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PermissionType {

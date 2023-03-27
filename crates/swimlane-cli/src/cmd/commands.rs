@@ -41,7 +41,7 @@ pub async fn handle_migrate(
     }
 
     match migration_type {
-        Migrate::Users {} => match dry_run {
+        Migrate::Users => match dry_run {
             true => {
                 let users = migrator.get_users_to_migrate().await?;
                 dry_run_resource_migrate(users);
@@ -51,7 +51,7 @@ pub async fn handle_migrate(
         Migrate::User { user_id: _ } => {
             todo!();
         }
-        Migrate::Groups {} => match dry_run {
+        Migrate::Groups => match dry_run {
             true => {
                 let groups = migrator.get_groups_to_migrate().await?;
                 dry_run_resource_migrate(groups);
@@ -61,7 +61,7 @@ pub async fn handle_migrate(
         Migrate::Group { group_id: _ } => {
             todo!();
         }
-        Migrate::Roles {} => match dry_run {
+        Migrate::Roles => match dry_run {
             true => {
                 let roles = migrator.get_roles_to_migrate().await?;
                 dry_run_resource_migrate(roles);
@@ -71,7 +71,7 @@ pub async fn handle_migrate(
         Migrate::Role { role_id: _ } => {
             todo!();
         }
-        Migrate::Apps {} => {
+        Migrate::Apps => {
             migrator.migrate_apps().await;
         }
         Migrate::App {
@@ -79,7 +79,7 @@ pub async fn handle_migrate(
         } => {
             todo!();
         }
-        Migrate::All {} => {
+        Migrate::All => {
             todo!();
         }
     }
