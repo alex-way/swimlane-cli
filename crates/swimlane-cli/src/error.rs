@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::util::ParsePackageVersionError;
+
 #[derive(Error, Debug)]
 pub enum SwimlaneCliError {
     #[error("Swimlane error")]
@@ -12,6 +14,8 @@ pub enum SwimlaneCliError {
     NoPackageOrRequirementsFileSpecified,
     #[error("Package {0} does not exist")]
     PackageDoesNotExist(String),
+    #[error("Error Parsing package version")]
+    ParsePackageError(#[from] ParsePackageVersionError),
     #[error("Generic error")]
     GenericError(#[source] Box<dyn std::error::Error>),
 }

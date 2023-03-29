@@ -116,11 +116,10 @@ async fn main() -> Result<(), SwimlaneCliError> {
                         .upload_python_requirements(&requirements_file)
                         .await?;
                 } else if let Some(package) = package {
-                    // todo: handle invalid package version
-                    let package_version = parse_package_version(&package);
+                    let package_version = parse_package_version(&package)?;
 
                     swimlane_client
-                        .install_pip_package(&package, package_version)
+                        .install_pip_package(&package, Some(package_version))
                         .await?;
                 } else {
                     return Err(SwimlaneCliError::NoPackageOrRequirementsFileSpecified);
