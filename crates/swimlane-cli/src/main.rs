@@ -89,10 +89,10 @@ pub enum Pip {
         #[arg(required = false, required_unless_present_any = ["requirements_file"])]
         package: Option<String>,
     },
-    /// Migrates all groups from the source Swimlane server to the destination Swimlane server
+    /// Removes a specified package from the Swimlane server
     #[command(arg_required_else_help = true)]
     Remove { package_name: String },
-    /// Migrates all roles from the source Swimlane server to the destination Swimlane server
+    /// Lists all installed packages
     Freeze,
 }
 
