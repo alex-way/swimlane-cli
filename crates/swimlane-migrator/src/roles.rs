@@ -19,11 +19,6 @@ impl LooksLike for Role {
     fn is_same_resource(&self, other: &Self) -> bool {
         self.name == other.name
     }
-
-    // fn looks_like(&self, other: &Self) -> bool {
-    //     // todo: compare group membership, role membership, permissions
-    //     self.disabled == other.disabled && self.description == other.description
-    // }
 }
 
 impl SwimlaneMigrator {

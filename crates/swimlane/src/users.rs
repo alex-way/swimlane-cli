@@ -137,6 +137,21 @@ pub struct UserGroupSelection {
     pub name: Option<String>,
 }
 
+impl PartialEq for UserGroupSelection {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Display for UserGroupSelection {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match &self.name {
+            Some(name) => write!(f, "UserGroupSelection: {}", name),
+            None => write!(f, "UserGroupSelection: None"),
+        }
+    }
+}
+
 impl SwimlaneClient {
     /// Gets all users.
     pub async fn get_users(&self) -> Result<Vec<User>, SwimlaneClientError> {

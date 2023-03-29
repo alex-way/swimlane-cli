@@ -138,11 +138,12 @@ async fn main() -> Result<(), SwimlaneCliError> {
             dry_run,
             auto_approve: _,
         } => {
+            let destination_swimlane_client =
+                SwimlaneClient::new(destination_swimlane_url, destination_swimlane_pat);
             handle_migrate(
                 swimlane_client,
+                destination_swimlane_client,
                 migration_type,
-                destination_swimlane_url,
-                destination_swimlane_pat,
                 dry_run,
             )
             .await?

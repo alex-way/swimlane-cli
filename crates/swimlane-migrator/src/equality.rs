@@ -19,7 +19,6 @@ pub enum Difference {
 }
 
 macro_rules! push_difference {
-    // todo: make $field:literal a string only
     ($differences:expr, $field:literal , $current_value:expr, $new_value:expr) => {
         if $current_value != $new_value {
             $differences.push(Difference::UpdatingField {

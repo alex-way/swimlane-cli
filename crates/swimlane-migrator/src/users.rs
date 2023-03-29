@@ -12,9 +12,9 @@ impl LooksLike for User {
         push_difference!(diffs, "display_name", &self.display_name, &other.display_name, optional: true);
         push_difference!(diffs, "disabled", &self.disabled, &other.disabled);
         // todo: Convert from ID to name somehow
-        push_difference!(diffs, "default_workspace_id", &self.default_workspace_id, &other.default_workspace_id, optional: true);
+        // push_difference!(diffs, "default_workspace_id", &self.default_workspace_id, &other.default_workspace_id, optional: true);
         // todo: Convert from ID to name somehow
-        push_difference!(diffs, "default_dashboard_id", &self.default_dashboard_id, &other.default_dashboard_id, optional: true);
+        // push_difference!(diffs, "default_dashboard_id", &self.default_dashboard_id, &other.default_dashboard_id, optional: true);
         // todo: Reduce the migrationplan output for avatar as it's a base64encoded string.
         push_difference!(diffs, "avatar", &self.avatar, &other.avatar, optional: true);
         push_difference!(diffs, "timezone_id", &self.timezone_id, &other.timezone_id);
@@ -25,15 +25,7 @@ impl LooksLike for User {
         push_difference!(diffs, "last_name", &self.last_name, &other.last_name, optional: true);
         push_difference!(diffs, "roles", &self.roles, &other.roles, vec: true);
         push_difference!(diffs, "groups", &self.groups, &other.groups, vec: true);
-
-        // todo: compare primary_group, default_dashboard
-        // push_difference!(
-        //     differences,
-        //     "primary_group",
-        //     &self.primary_group,
-        //     &other.primary_group,
-        //     optional: true
-        // );
+        push_difference!(diffs, "primary_group", &self.primary_group, &other.primary_group, optional: true);
 
         diffs
     }
@@ -41,15 +33,6 @@ impl LooksLike for User {
     fn is_same_resource(&self, other: &Self) -> bool {
         self.user_name == other.user_name
     }
-
-    // fn looks_like(&self, other: &Self) -> bool {
-    //     // todo: compare group membership, role membership, primary group, phone, time zone, default dashboard, profile image, middle initial
-    //     self.display_name == other.display_name
-    //         && self.disabled == other.disabled
-    //         && self.email == other.email
-    //         && self.first_name == other.first_name
-    //         && self.last_name == other.last_name
-    // }
 }
 
 impl SwimlaneMigrator {
