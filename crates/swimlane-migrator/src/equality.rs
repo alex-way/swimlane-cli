@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use swimlane::BaseEntity;
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Difference {
     UpdatingField {
         field: String,
@@ -93,7 +94,7 @@ pub trait LooksLike {
     /// For example,
     ///
     /// ```rust
-    /// use swimlane_migrator::equality::LooksLike;
+    /// use swimlane_migrator::equality::{LooksLike,Difference};
     ///
     /// struct User {
     ///   id: String,
@@ -101,8 +102,17 @@ pub trait LooksLike {
     /// }
     ///
     /// impl LooksLike for User {
+    /// fn differences(&self, other: &Self) -> Vec<Difference> {
+    ///  let mut differences = vec![];
+    ///  differences
+    /// }
+    ///
     ///  fn looks_like(&self, other: &Self) -> bool {
     ///   self.user_name == other.user_name
+    ///  }
+    ///
+    ///  fn is_same_resource(&self, other: &Self) -> bool {
+    ///     self.id == other.id
     ///  }
     /// }
     ///
@@ -127,6 +137,40 @@ pub trait LooksLike {
         self.differences(other).is_empty()
     }
 
+    /// Whether the two objects are the same resource
+    /// For example,
+    ///
+    /// ```rust
+    /// use swimlane_migrator::equality::{LooksLike,Difference};
+    ///
+    /// struct User {
+    ///  id: String,
+    /// user_name: String,
+    /// }
+    ///
+    /// impl LooksLike for User {
+    /// fn differences(&self, other: &Self) -> Vec<Difference> {
+    ///  let mut differences = vec![];
+    ///  differences
+    /// }
+    ///
+    /// fn is_same_resource(&self, other: &Self) -> bool {
+    ///     self.id == other.id
+    /// }
+    /// }
+    ///
+    /// let a = User {
+    /// id: "2".to_string(),
+    /// user_name: "user1".to_string(),
+    /// };
+    ///
+    /// let b = User {
+    /// id: "1".to_string(),
+    /// user_name: "user1".to_string(),
+    /// };
+    ///
+    /// assert_eq!(a.is_same_resource(&b), false)
+    /// ```
     fn is_same_resource(&self, other: &Self) -> bool;
 }
 

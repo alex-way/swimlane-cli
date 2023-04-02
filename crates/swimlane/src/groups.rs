@@ -6,7 +6,7 @@ use crate::{BaseEntity, SwimlaneClient, SwimlaneClientError};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Group {
     pub id: String,
     pub name: String,

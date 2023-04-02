@@ -72,9 +72,13 @@ pub async fn handle_migrate(
         Migrate::Role { role_id: _ } => {
             todo!();
         }
-        Migrate::Apps => {
-            migrator.migrate_apps().await;
-        }
+        Migrate::Apps => match dry_run {
+            true => {
+                let apps = migrator.get_apps_to_migrate().await?;
+                dry_run_resource_migrate(apps);
+            }
+            false => migrator.migrate_apps().await?,
+        },
         Migrate::App {
             application_name: _,
         } => {

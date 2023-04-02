@@ -131,7 +131,7 @@ impl Display for User {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct UserGroupSelection {
     pub id: Option<String>,
     pub name: Option<String>,

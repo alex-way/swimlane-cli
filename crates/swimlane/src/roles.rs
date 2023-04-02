@@ -9,12 +9,32 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PermissionType {
+    Role,
     Global,
     Application,
     Report,
     Dashboard,
     Workspace,
 }
+
+// todo: add integer values which the below equate to
+// pub enum FieldPermissionType {
+//     None,
+//     Create,
+//     Read,
+//     Update,
+//     Delete,
+//     Admin,
+//     Execute,
+//     CreateInstance,
+//     ReadInstance,
+//     UpdateInstance,
+//     DeleteInstance,
+//     BulkCreateInstance,
+//     Export,
+//     Lock,
+//     Restrict,
+// }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PermissionMatrix {

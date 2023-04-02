@@ -6,6 +6,7 @@ use crate::{MigrationPlan, SwimlaneMigrator, SwimlaneMigratorError};
 use swimlane::groups::Group;
 
 impl LooksLike for Group {
+    /// Hello world
     fn differences(&self, other: &Self) -> Vec<Difference> {
         let mut differences = vec![];
 
@@ -162,43 +163,41 @@ impl SwimlaneMigrator {
     ///
     /// ```rust
     /// use swimlane_migrator::SwimlaneMigrator;
+    /// use swimlane::SwimlaneClient;
     /// use swimlane::groups::Group;
     /// use std::collections::HashMap;
     ///
-    /// let mut group = Group {
-    ///    id: "1234".to_string(),
-    ///   name: "Group 1".to_string(),
-    ///  groups: vec![Group {
-    ///    id: "5678".to_string(),
-    ///   name: "Group 2".to_string(),
-    /// groups: vec![],
-    /// roles: vec![],
-    /// users: vec![],
-    /// }],
-    /// roles: vec![],
-    /// users: vec![],
-    /// };
+    /// let mut group = Group::default();
     ///
-    /// let group_id_hashmap = HashMap::new();
-    /// group_id_hashmap.insert("5678".to_string(), "9012".to_string());
+    /// group.id = "1234".to_string();
+    ///
+    /// let mut group_id_hashmap = HashMap::new();
+    /// group_id_hashmap.insert("1234".to_string(), "9012".to_string());
     ///
     /// let user_id_hashmap = HashMap::new();
     ///
     /// let role_id_hashmap = HashMap::new();
     ///
-    /// let mut migrator = SwimlaneMigrator::new();
-    /// migrator.adapt_group(&mut group, &group_id_hashmap, &user_id_hashmap, &role_id_hashmap).await;
+    /// let source_swimlane = SwimlaneClient::new("https://source.swimlane.com".to_string(), "source_api_key".to_string());
     ///
-    /// assert_eq!(group.id, "1234");
-    /// assert_eq!(group.groups[0].id, "9012");
+    /// let destination_swimlane = SwimlaneClient::new("https://destination.swimlane.com".to_string(), "destination_api_key".to_string());
+    ///
+    /// let migrator = SwimlaneMigrator::new(source_swimlane, destination_swimlane, false).expect("Failed to create migrator");
+    /// migrator.adapt_group(&mut group, &group_id_hashmap, &user_id_hashmap, &role_id_hashmap);
+    ///
+    /// assert_eq!(group.id, "9012");
     /// ```
-    pub async fn adapt_group(
+    pub fn adapt_group(
         &self,
         group: &mut Group,
         group_id_hashmap: &HashMap<String, String>,
         user_id_hashmap: &HashMap<String, String>,
         role_id_hashmap: &HashMap<String, String>,
     ) {
+        if let Some(new_id) = group_id_hashmap.get(&group.id) {
+            group.id = new_id.clone();
+        }
+
         for user in &mut group.users {
             if let Some(new_id) = user_id_hashmap.get(&user.id) {
                 user.id = new_id.clone();
@@ -216,5 +215,111 @@ impl SwimlaneMigrator {
                 child_group.id = new_id.clone();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use swimlane::BaseEntity;
+
+    use super::*;
+
+    #[test]
+    fn test_name_inequality_triggers_difference() {
+        let mut source_group = Group::default();
+        let mut destination_group = Group::default();
+        source_group.name = "Group 1".to_string();
+        destination_group.name = "Group 2".to_string();
+
+        let differences = source_group.differences(&destination_group);
+        assert_eq!(differences.len(), 1);
+        assert_eq!(
+            differences[0],
+            Difference::UpdatingField {
+                field: "name".to_string(),
+                current_value: "Group 1".to_string(),
+                new_value: "Group 2".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_disabled_inequality_triggers_difference() {
+        let mut source_group = Group::default();
+        let mut destination_group = Group::default();
+        source_group.disabled = true;
+        destination_group.disabled = false;
+
+        let differences = source_group.differences(&destination_group);
+        assert_eq!(differences.len(), 1);
+        assert_eq!(
+            differences[0],
+            Difference::UpdatingField {
+                field: "disabled".to_string(),
+                current_value: true.to_string(),
+                new_value: false.to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_description_inequality_triggers_difference() {
+        let mut source_group = Group::default();
+        let mut destination_group = Group::default();
+        source_group.description = Some("Description 1".to_string());
+        destination_group.description = Some("Description 2".to_string());
+
+        let differences = source_group.differences(&destination_group);
+        assert_eq!(differences.len(), 1);
+        assert_eq!(
+            differences[0],
+            Difference::UpdatingField {
+                field: "description".to_string(),
+                current_value: "Description 1".to_string(),
+                new_value: "Description 2".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_users_inequality_triggers_difference() {
+        let mut source_group = Group::default();
+        let destination_group = Group::default();
+        source_group.users = vec![BaseEntity {
+            id: "1234".to_string(),
+            name: "User 1".to_string(),
+            disabled: false,
+        }];
+
+        let differences = source_group.differences(&destination_group);
+        assert_eq!(differences.len(), 1);
+        assert_eq!(
+            differences[0],
+            Difference::AddingItem {
+                field: "users".to_string(),
+                item: "User 1".to_string()
+            }
+        )
+    }
+
+    #[test]
+    fn test_roles_inequality_triggers_difference() {
+        let mut source_group = Group::default();
+        let destination_group = Group::default();
+        source_group.roles = vec![BaseEntity {
+            id: "1234".to_string(),
+            name: "Role 1".to_string(),
+            disabled: false,
+        }];
+
+        let differences = source_group.differences(&destination_group);
+        assert_eq!(differences.len(), 1);
+        assert_eq!(
+            differences[0],
+            Difference::AddingItem {
+                field: "roles".to_string(),
+                item: "Role 1".to_string()
+            }
+        )
     }
 }

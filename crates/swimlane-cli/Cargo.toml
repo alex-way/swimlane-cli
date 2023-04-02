@@ -4,9 +4,9 @@ version = "0.0.3"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.1.13", features = ["derive", "env"] }
-tokio = { version = "1", features = ["full"] }
+clap = { version = "4.2.1", features = ["derive", "env"] }
+tokio = { version = "1.27.0", features = ["rt-multi-thread", "fs", "macros"] }
 swimlane = { path = "../swimlane" }
 swimlane-migrator = { path = "../swimlane-migrator" }
-thiserror = "1.0"
-colored = "2"
+thiserror = "1.0.40"
+colored = "2.0.0"

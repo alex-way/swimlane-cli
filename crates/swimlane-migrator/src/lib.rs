@@ -1,6 +1,7 @@
 mod adapt;
 #[macro_use]
 pub mod equality;
+pub mod apps;
 pub mod groups;
 pub mod roles;
 pub mod users;
@@ -57,34 +58,5 @@ impl SwimlaneMigrator {
             return Err(SwimlaneMigratorNewError::SourceAndDestinationAreIdentical);
         }
         Ok(SwimlaneMigrator { from, to, dry_run })
-    }
-
-    /// Transforms a group's properties to match that of the destination system.
-    /// This will allow us to
-    // async fn adapt_group(
-    //     &self,
-    //     group: &swimlane::Group,
-    // ) -> Result<swimlane::Group, SwimlaneMigratorError> {
-    //     let mut group = group.clone();
-
-    //     // let mut users = vec![];
-    //     // for user in group.users {
-    //     //     let user = self.to.get_user_by_username(&user).await?;
-    //     //     users.push(user.user_name);
-    //     // }
-    //     // group.users = users;
-
-    //     // let mut groups = vec![];
-    //     // for group in group.groups {
-    //     //     let group = self.to.get_group_by_name(&group).await?;
-    //     //     groups.push(group.name);
-    //     // }
-    //     // group.groups = groups;
-
-    //     Ok(group)
-    // }
-
-    pub async fn migrate_apps(&self) {
-        todo!()
     }
 }
