@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use super::{BaseField, FieldType};
+use super::BaseField;
+
+serde_enum!(NumericFieldType, { Numeric, List });
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
@@ -8,7 +10,7 @@ use super::{BaseField, FieldType};
 pub struct NumericField {
     #[serde(flatten)]
     pub base: BaseField,
-    pub field_type: FieldType,
+    pub field_type: NumericFieldType,
     /// Always 1?
     pub step: u64,
     pub unique: bool,
@@ -29,7 +31,7 @@ pub struct NumericField {
 pub struct NumericListField {
     #[serde(flatten)]
     pub base: BaseField,
-    pub field_type: FieldType,
+    pub field_type: NumericFieldType,
     /// Always "numeric"
     pub input_type: String,
     // Always "list"
@@ -44,7 +46,6 @@ pub struct NumericListField {
 
 #[cfg(test)]
 mod tests {
-    use crate::apps::fields::FieldType;
 
     use super::*;
 
@@ -70,7 +71,7 @@ mod tests {
         assert_eq!(field.base.id, "ajy4m");
         assert_eq!(field.base.name, "Numeric");
         assert_eq!(field.base.key, "numeric");
-        assert_eq!(field.field_type, FieldType::Numeric);
+        assert_eq!(field.field_type, NumericFieldType::Numeric);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -102,7 +103,7 @@ mod tests {
         assert_eq!(field.base.id, "ao7tu");
         assert_eq!(field.base.name, "Numeric List");
         assert_eq!(field.base.key, "numeric-list");
-        assert_eq!(field.field_type, FieldType::List);
+        assert_eq!(field.field_type, NumericFieldType::List);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(field.base.supports_multiple_output_mappings);

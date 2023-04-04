@@ -1,24 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-use super::{BaseField, FieldType};
+use super::BaseField;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub enum TextLengthType {
-    None,
-    Characters,
-    Words,
-}
+serde_enum!(TextLengthType, { None, Characters, Words });
+
+serde_enum!(TextFieldType, { Text, List });
 
 macro_rules! core_text_field {
-    ($name:ident, $input_type:expr, $field_type:expr) => {
+    ($name:ident, $input_type:expr) => {
         #[derive(Serialize, Deserialize, Debug, Clone)]
         #[serde(deny_unknown_fields)]
         #[serde(rename_all = "camelCase")]
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
-            pub field_type: FieldType,
+            pub field_type: TextFieldType,
             pub prefix: String,
             pub suffix: String,
             pub placeholder: String,
@@ -31,14 +27,14 @@ macro_rules! core_text_field {
             pub formula: Option<String>,
         }
     };
-    ($name:ident, $input_type:expr, $field_type:expr, min_max_length = true) => {
+    ($name:ident, $input_type:expr, min_max_length = true) => {
         #[derive(Serialize, Deserialize, Debug, Clone)]
         #[serde(deny_unknown_fields)]
         #[serde(rename_all = "camelCase")]
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
-            pub field_type: FieldType,
+            pub field_type: TextFieldType,
             pub prefix: String,
             pub suffix: String,
             pub placeholder: String,
@@ -55,19 +51,14 @@ macro_rules! core_text_field {
     };
 }
 
-core_text_field!(SingleLineTextField, "text", "text", min_max_length = true);
-core_text_field!(
-    MultiLineTextField,
-    "multiline",
-    "text",
-    min_max_length = true
-);
-core_text_field!(EmailField, "email", "text");
-core_text_field!(TelephoneField, "telephone", "text");
-core_text_field!(UrlField, "url", "text");
-core_text_field!(IpAddressField, "ip", "text");
-core_text_field!(RichTextField, "rich", "text");
-core_text_field!(JsonField, "json", "text");
+core_text_field!(SingleLineTextField, "text", min_max_length = true);
+core_text_field!(MultiLineTextField, "multiline", min_max_length = true);
+core_text_field!(EmailField, "email");
+core_text_field!(TelephoneField, "telephone");
+core_text_field!(UrlField, "url");
+core_text_field!(IpAddressField, "ip");
+core_text_field!(RichTextField, "rich");
+core_text_field!(JsonField, "json");
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
@@ -75,7 +66,7 @@ core_text_field!(JsonField, "json", "text");
 pub struct TextListField {
     #[serde(flatten)]
     pub base: BaseField,
-    pub field_type: FieldType,
+    pub field_type: TextFieldType,
     pub input_type: String,
     pub item_length_type: TextLengthType,
     pub item_step: i64,
@@ -83,8 +74,6 @@ pub struct TextListField {
 
 #[cfg(test)]
 mod tests {
-    use crate::apps::fields::FieldType;
-
     use super::*;
 
     #[test]
@@ -114,7 +103,7 @@ mod tests {
         assert_eq!(field.base.id, "aocn0");
         assert_eq!(field.base.name, "single line");
         assert_eq!(field.base.key, "single-line");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -156,7 +145,7 @@ mod tests {
         assert_eq!(field.base.id, "aynwz");
         assert_eq!(field.base.name, "multi line");
         assert_eq!(field.base.key, "multi-line");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -197,7 +186,7 @@ mod tests {
         assert_eq!(field.base.id, "apaz2");
         assert_eq!(field.base.name, "Email");
         assert_eq!(field.base.key, "email");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -239,7 +228,7 @@ mod tests {
         assert_eq!(field.base.id, "alixu");
         assert_eq!(field.base.name, "Telephone");
         assert_eq!(field.base.key, "telephone");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -281,7 +270,7 @@ mod tests {
         assert_eq!(field.base.id, "a8sms");
         assert_eq!(field.base.name, "URL");
         assert_eq!(field.base.key, "url");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -323,7 +312,7 @@ mod tests {
         assert_eq!(field.base.id, "avni6");
         assert_eq!(field.base.name, "IP");
         assert_eq!(field.base.key, "ip");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -365,7 +354,7 @@ mod tests {
         assert_eq!(field.base.id, "afftg");
         assert_eq!(field.base.name, "Rich Text");
         assert_eq!(field.base.key, "rich-text");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -407,7 +396,7 @@ mod tests {
         assert_eq!(field.base.id, "a7h9k");
         assert_eq!(field.base.name, "JSON");
         assert_eq!(field.base.key, "json");
-        assert_eq!(field.field_type, FieldType::Text);
+        assert_eq!(field.field_type, TextFieldType::Text);
         assert!(!field.base.required);
         assert!(field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -443,7 +432,7 @@ mod tests {
         assert_eq!(field.base.id, "ag4kq");
         assert_eq!(field.base.name, "Text List");
         assert_eq!(field.base.key, "text-list");
-        assert_eq!(field.field_type, FieldType::List);
+        assert_eq!(field.field_type, TextFieldType::List);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(field.base.supports_multiple_output_mappings);

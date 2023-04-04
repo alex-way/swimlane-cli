@@ -2,29 +2,11 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::{BaseField, FieldType};
+use super::BaseField;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub enum UserGroupInputType {
-    CreatedBy,
-    LastUpdatedBy,
-    UserGroup,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub enum UserGroupSelectionType {
-    Users,
-    Groups,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub enum UserGroupItemType {
-    User,
-    Group,
-}
+serde_enum!(UserGroupInputType, { CreatedBy, LastUpdatedBy, UserGroup });
+serde_enum!(UserGroupSelectionType, { Users, Groups });
+serde_enum!(UserGroupItemType, { User, Group });
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -50,21 +32,21 @@ pub struct ReverseValueMap {
 #[serde(rename_all = "camelCase")]
 pub struct UserGroupDefaultValue {}
 
+serde_enum!(UserGroupFieldType, { UserGroup });
+
 macro_rules! user_group_field {
-    ($name:ident, $control_type:expr, $selection_type:expr, $field_type:expr) => {
+    ($name:ident, $control_type:expr, $selection_type:expr) => {
         #[derive(Serialize, Deserialize, Debug, Clone)]
         #[serde(deny_unknown_fields)]
         #[serde(rename_all = "camelCase")]
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
-            pub field_type: FieldType,
+            pub field_type: UserGroupFieldType,
             /// Always $control_type
             pub control_type: String,
             /// Always $selection_type
             pub selection_type: String,
-            // Always $field_type
-            // pub field_type: String,
             pub show_all_users: bool,
             pub show_all_groups: bool,
             pub members: Vec<UserGroupValue>,
@@ -76,7 +58,7 @@ macro_rules! user_group_field {
     };
 }
 
-user_group_field!(SingleUserGroupField, "user", "single", "userGroup");
-user_group_field!(MultiUserGroupField, "user", "multiple", "userGroup");
-user_group_field!(CreatedByField, "user", "single", "userGroup");
-user_group_field!(LastUpdatedByField, "user", "single", "userGroup");
+user_group_field!(SingleUserGroupField, "user", "single");
+user_group_field!(MultiUserGroupField, "user", "multiple");
+user_group_field!(CreatedByField, "user", "single");
+user_group_field!(LastUpdatedByField, "user", "single");

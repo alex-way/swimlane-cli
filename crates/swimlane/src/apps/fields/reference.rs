@@ -1,16 +1,18 @@
 use serde::{Deserialize, Serialize};
 
-use super::{BaseField, FieldType};
+use super::BaseField;
+
+serde_enum!(ReferenceFieldType, { Reference });
 
 macro_rules! reference_field {
-    ($name:ident, $control_type:expr, $selection_type:expr, $field_type:expr) => {
+    ($name:ident, $control_type:expr, $selection_type:expr) => {
         #[derive(Serialize, Deserialize, Debug, Clone)]
         #[serde(deny_unknown_fields)]
         #[serde(rename_all = "camelCase")]
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
-            pub field_type: FieldType,
+            pub field_type: ReferenceFieldType,
             pub target_id: String,
             pub columns: Vec<String>,
             /// Always $control_type
@@ -19,21 +21,17 @@ macro_rules! reference_field {
             pub selection_type: String,
             pub can_add: bool,
             pub create_backreference: bool,
-            // Always $field_type
-            // pub field_type: String,
         }
     };
 }
 
-reference_field!(SingleReferenceField, "select", "single", "reference");
-reference_field!(MultiReferenceField, "select", "multi", "reference");
-reference_field!(GridReferenceField, "select", "multi", "reference");
-reference_field!(CorrelationField, "correlation", "single", "reference");
+reference_field!(SingleReferenceField, "select", "single");
+reference_field!(MultiReferenceField, "select", "multi");
+reference_field!(GridReferenceField, "select", "multi");
+reference_field!(CorrelationField, "correlation", "single");
 
 #[cfg(test)]
 mod tests {
-    use crate::apps::fields::FieldType;
-
     use super::*;
 
     #[test]
@@ -61,7 +59,7 @@ mod tests {
         assert_eq!(field.base.id, "asfyh");
         assert_eq!(field.base.name, "single Reference");
         assert_eq!(field.base.key, "single-reference");
-        assert_eq!(field.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, ReferenceFieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -97,7 +95,7 @@ mod tests {
         assert_eq!(field.base.id, "ads1h");
         assert_eq!(field.base.name, "multi Reference");
         assert_eq!(field.base.key, "multi-reference");
-        assert_eq!(field.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, ReferenceFieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -133,7 +131,7 @@ mod tests {
         assert_eq!(field.base.id, "a9tiq");
         assert_eq!(field.base.name, "grid Reference");
         assert_eq!(field.base.key, "grid-reference");
-        assert_eq!(field.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, ReferenceFieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -169,7 +167,7 @@ mod tests {
         assert_eq!(field.base.id, "avwdh");
         assert_eq!(field.base.name, "Correlation");
         assert_eq!(field.base.key, "correlation");
-        assert_eq!(field.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, ReferenceFieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
