@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::{BaseField, FieldType};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -58,6 +58,7 @@ macro_rules! user_group_field {
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
+            pub field_type: FieldType,
             /// Always $control_type
             pub control_type: String,
             /// Always $selection_type

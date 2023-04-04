@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::{BaseField, FieldType};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -18,6 +18,7 @@ macro_rules! core_text_field {
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
+            pub field_type: FieldType,
             pub prefix: String,
             pub suffix: String,
             pub placeholder: String,
@@ -37,6 +38,7 @@ macro_rules! core_text_field {
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
+            pub field_type: FieldType,
             pub prefix: String,
             pub suffix: String,
             pub placeholder: String,
@@ -73,6 +75,7 @@ core_text_field!(JsonField, "json", "text");
 pub struct TextListField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
     pub input_type: String,
     pub item_length_type: TextLengthType,
     pub item_step: i64,
@@ -111,7 +114,7 @@ mod tests {
         assert_eq!(field.base.id, "aocn0");
         assert_eq!(field.base.name, "single line");
         assert_eq!(field.base.key, "single-line");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -153,7 +156,7 @@ mod tests {
         assert_eq!(field.base.id, "aynwz");
         assert_eq!(field.base.name, "multi line");
         assert_eq!(field.base.key, "multi-line");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -194,7 +197,7 @@ mod tests {
         assert_eq!(field.base.id, "apaz2");
         assert_eq!(field.base.name, "Email");
         assert_eq!(field.base.key, "email");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -236,7 +239,7 @@ mod tests {
         assert_eq!(field.base.id, "alixu");
         assert_eq!(field.base.name, "Telephone");
         assert_eq!(field.base.key, "telephone");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -278,7 +281,7 @@ mod tests {
         assert_eq!(field.base.id, "a8sms");
         assert_eq!(field.base.name, "URL");
         assert_eq!(field.base.key, "url");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -320,7 +323,7 @@ mod tests {
         assert_eq!(field.base.id, "avni6");
         assert_eq!(field.base.name, "IP");
         assert_eq!(field.base.key, "ip");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -362,7 +365,7 @@ mod tests {
         assert_eq!(field.base.id, "afftg");
         assert_eq!(field.base.name, "Rich Text");
         assert_eq!(field.base.key, "rich-text");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -404,7 +407,7 @@ mod tests {
         assert_eq!(field.base.id, "a7h9k");
         assert_eq!(field.base.name, "JSON");
         assert_eq!(field.base.key, "json");
-        assert_eq!(field.base.field_type, FieldType::Text);
+        assert_eq!(field.field_type, FieldType::Text);
         assert!(!field.base.required);
         assert!(field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -440,7 +443,7 @@ mod tests {
         assert_eq!(field.base.id, "ag4kq");
         assert_eq!(field.base.name, "Text List");
         assert_eq!(field.base.key, "text-list");
-        assert_eq!(field.base.field_type, FieldType::List);
+        assert_eq!(field.field_type, FieldType::List);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(field.base.supports_multiple_output_mappings);

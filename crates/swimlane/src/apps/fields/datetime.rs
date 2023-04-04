@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::{BaseField, FieldType};
 
 /// Used for DateField to specify the minMode field
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -36,6 +36,7 @@ pub enum DateTimeFieldDefaultValueType {
 pub struct DateField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
     /// Always "date"
     pub input_type: String,
     // Always "date"
@@ -63,6 +64,7 @@ pub enum TimeFieldFuturePastType {
 pub struct TimeField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
     /// Always "time"
     pub input_type: String,
     // Always "date"
@@ -82,6 +84,7 @@ pub struct TimeField {
 pub struct DateTimeField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
     /// Always "dateTime"
     pub input_type: String,
     // Always "date"
@@ -110,6 +113,7 @@ pub struct TimeSpan {
 pub struct TimeSpanField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
     /// Always "timespan"
     pub input_type: String,
     pub default_value_type: String,
@@ -137,6 +141,7 @@ macro_rules! builtin_date_field {
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
+            pub field_type: FieldType,
             /// Always "firstCreated"
             pub input_type: String,
             // Always "date"
@@ -179,7 +184,7 @@ mod tests {
         assert_eq!(field.base.id, "awohj");
         assert_eq!(field.base.name, "First Created");
         assert_eq!(field.base.key, "first-created");
-        assert_eq!(field.base.field_type, FieldType::Date);
+        assert_eq!(field.field_type, FieldType::Date);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -212,7 +217,7 @@ mod tests {
         assert_eq!(field.base.id, "adb8i");
         assert_eq!(field.base.name, "Last Updated");
         assert_eq!(field.base.key, "last-updated");
-        assert_eq!(field.base.field_type, FieldType::Date);
+        assert_eq!(field.field_type, FieldType::Date);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);

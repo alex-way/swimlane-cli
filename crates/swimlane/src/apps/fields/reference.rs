@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::{BaseField, FieldType};
 
 macro_rules! reference_field {
     ($name:ident, $control_type:expr, $selection_type:expr, $field_type:expr) => {
@@ -10,6 +10,7 @@ macro_rules! reference_field {
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
+            pub field_type: FieldType,
             pub target_id: String,
             pub columns: Vec<String>,
             /// Always $control_type
@@ -60,7 +61,7 @@ mod tests {
         assert_eq!(field.base.id, "asfyh");
         assert_eq!(field.base.name, "single Reference");
         assert_eq!(field.base.key, "single-reference");
-        assert_eq!(field.base.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, FieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -96,7 +97,7 @@ mod tests {
         assert_eq!(field.base.id, "ads1h");
         assert_eq!(field.base.name, "multi Reference");
         assert_eq!(field.base.key, "multi-reference");
-        assert_eq!(field.base.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, FieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -132,7 +133,7 @@ mod tests {
         assert_eq!(field.base.id, "a9tiq");
         assert_eq!(field.base.name, "grid Reference");
         assert_eq!(field.base.key, "grid-reference");
-        assert_eq!(field.base.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, FieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);
@@ -168,7 +169,7 @@ mod tests {
         assert_eq!(field.base.id, "avwdh");
         assert_eq!(field.base.name, "Correlation");
         assert_eq!(field.base.key, "correlation");
-        assert_eq!(field.base.field_type, FieldType::Reference);
+        assert_eq!(field.field_type, FieldType::Reference);
         assert!(!field.base.required);
         assert!(!field.base.read_only);
         assert!(!field.base.supports_multiple_output_mappings);

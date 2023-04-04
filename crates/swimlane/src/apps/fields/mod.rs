@@ -72,7 +72,6 @@ pub struct BaseField {
     pub name: String,
     pub key: String,
     pub supports_multiple_output_mappings: bool,
-    pub field_type: FieldType,
     pub required: bool,
     pub read_only: bool,
 }
@@ -84,6 +83,7 @@ pub struct AttachmentsField {
     // fieldType = "attachment"
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
     pub max_size: u64,
     pub time_to_live: Option<u64>,
     /// Comma separated list of file extensions. e.g. "jpg,png,gif"
@@ -118,6 +118,7 @@ pub struct TrackingIdField {
 pub struct CommentsField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
 }
 
 // "fieldType": "history"
@@ -127,4 +128,5 @@ pub struct CommentsField {
 pub struct HistoryField {
     #[serde(flatten)]
     pub base: BaseField,
+    pub field_type: FieldType,
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::{BaseField, FieldType};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
@@ -26,6 +26,7 @@ macro_rules! selection_field {
         pub struct $name {
             #[serde(flatten)]
             pub base: BaseField,
+            pub field_type: FieldType,
             pub values: Vec<ValuesListValue>,
             /// Always $control_type
             pub control_type: String,
@@ -90,7 +91,7 @@ mod tests {
         assert_eq!(field.base.id, "asfyh");
         assert_eq!(field.base.name, "single Select");
         assert_eq!(field.base.key, "single-select");
-        assert_eq!(field.base.field_type, FieldType::ValuesList);
+        assert_eq!(field.field_type, FieldType::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
@@ -150,7 +151,7 @@ mod tests {
         assert_eq!(field.base.id, "asfyh");
         assert_eq!(field.base.name, "multi Select");
         assert_eq!(field.base.key, "multi-select");
-        assert_eq!(field.base.field_type, FieldType::ValuesList);
+        assert_eq!(field.field_type, FieldType::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
@@ -210,7 +211,7 @@ mod tests {
         assert_eq!(field.base.id, "asfyh");
         assert_eq!(field.base.name, "radio buttons");
         assert_eq!(field.base.key, "radio-buttons");
-        assert_eq!(field.base.field_type, FieldType::ValuesList);
+        assert_eq!(field.field_type, FieldType::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
@@ -272,7 +273,7 @@ mod tests {
         assert_eq!(field.base.id, "a5jd9");
         assert_eq!(field.base.name, "Checkboxes");
         assert_eq!(field.base.key, "checkboxes");
-        assert_eq!(field.base.field_type, FieldType::ValuesList);
+        assert_eq!(field.field_type, FieldType::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "642afdc6c0476e1ea9a0138e");
         assert_eq!(field.values[0].name, "test2");
