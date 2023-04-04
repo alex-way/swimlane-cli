@@ -11,6 +11,12 @@ impl LooksLike for Application {
         push_difference!(differences, "name", &self.name, &other.name);
         push_difference!(differences, "disabled", &self.disabled, &other.disabled);
         push_difference!(differences, "description", &self.description, &other.description, optional: true);
+        push_difference!(
+            differences,
+            "time_tracking_enabled",
+            &self.time_tracking_enabled,
+            &other.time_tracking_enabled
+        );
 
         differences
     }

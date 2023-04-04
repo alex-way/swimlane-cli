@@ -45,7 +45,7 @@ macro_rules! push_difference {
         $differences.extend($source_vec.iter().filter_map(|item| {
             let item_exists = $target_vec
                 .iter()
-                .find(|other_item| item.looks_like(other_item));
+                .find(|other_item| item.is_same_resource(other_item));
             match item_exists {
                 Some(_) => None,
                 None => Some(Difference::AddingItem {
@@ -57,7 +57,7 @@ macro_rules! push_difference {
         $differences.extend($target_vec.iter().filter_map(|item| {
             let item_exists = $source_vec
                 .iter()
-                .find(|other_item| item.looks_like(other_item));
+                .find(|other_item| item.is_same_resource(other_item));
             match item_exists {
                 Some(_) => None,
                 None => Some(Difference::RemovingItem {
