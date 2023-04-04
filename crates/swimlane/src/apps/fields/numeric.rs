@@ -1,48 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::constants::{ListConstant, NumericConstant};
 
-serde_enum!(NumericFieldType, { Numeric, List });
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct NumericField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: NumericFieldType,
-    /// Always 1?
+define_field!(NumericField, NumericConstant, {
     pub step: u64,
     pub unique: bool,
     pub prefix: String,
     pub suffix: String,
-    /// Always "none"?
     pub format: String,
     pub min: Option<i64>,
     pub max: Option<i64>,
-    /// Always "numeric"
-    // pub field_type: String,
     pub formula: Option<String>,
-}
+});
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct NumericListField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: NumericFieldType,
-    /// Always "numeric"
-    pub input_type: String,
-    // Always "list"
-    // pub field_type: String,
-    /// Always 0?
+define_field!(NumericListField, ListConstant, {
+    pub input_type: NumericConstant,
     pub item_step: u64,
     pub item_min: Option<i64>,
     pub item_max: Option<i64>,
     pub max_items: Option<u64>,
     pub min_items: Option<u64>,
-}
+});
 
 #[cfg(test)]
 mod tests {
@@ -68,13 +46,13 @@ mod tests {
 		}"#;
 
         let field: NumericField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "ajy4m");
-        assert_eq!(field.base.name, "Numeric");
-        assert_eq!(field.base.key, "numeric");
-        assert_eq!(field.field_type, NumericFieldType::Numeric);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "ajy4m");
+        assert_eq!(field.name, "Numeric");
+        assert_eq!(field.key, "numeric");
+        assert_eq!(field.field_type, NumericConstant::Numeric);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.step, 1);
         assert!(!field.unique);
         assert_eq!(field.prefix, "");
@@ -100,14 +78,14 @@ mod tests {
 			"readOnly": false
 		}"#;
         let field: NumericListField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "ao7tu");
-        assert_eq!(field.base.name, "Numeric List");
-        assert_eq!(field.base.key, "numeric-list");
-        assert_eq!(field.field_type, NumericFieldType::List);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(field.base.supports_multiple_output_mappings);
-        assert_eq!(field.input_type, "numeric");
+        assert_eq!(field.id, "ao7tu");
+        assert_eq!(field.name, "Numeric List");
+        assert_eq!(field.key, "numeric-list");
+        assert_eq!(field.field_type, ListConstant::List);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(field.supports_multiple_output_mappings);
+        assert_eq!(field.input_type, NumericConstant::Numeric);
         assert_eq!(field.item_step, 0);
         assert_eq!(field.item_min, None);
         assert_eq!(field.item_max, None);

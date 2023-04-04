@@ -1,18 +1,9 @@
+use super::constants::ReferenceConstant;
 use serde::{Deserialize, Serialize};
-
-use super::BaseField;
-
-serde_enum!(ReferenceFieldType, { Reference });
 
 macro_rules! reference_field {
     ($name:ident, $control_type:expr, $selection_type:expr) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        #[serde(deny_unknown_fields)]
-        #[serde(rename_all = "camelCase")]
-        pub struct $name {
-            #[serde(flatten)]
-            pub base: BaseField,
-            pub field_type: ReferenceFieldType,
+      define_field!($name, ReferenceConstant, {
             pub target_id: String,
             pub columns: Vec<String>,
             /// Always $control_type
@@ -21,7 +12,7 @@ macro_rules! reference_field {
             pub selection_type: String,
             pub can_add: bool,
             pub create_backreference: bool,
-        }
+        });
     };
 }
 
@@ -56,13 +47,13 @@ mod tests {
           }"#;
 
         let field: SingleReferenceField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "asfyh");
-        assert_eq!(field.base.name, "single Reference");
-        assert_eq!(field.base.key, "single-reference");
-        assert_eq!(field.field_type, ReferenceFieldType::Reference);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "asfyh");
+        assert_eq!(field.name, "single Reference");
+        assert_eq!(field.key, "single-reference");
+        assert_eq!(field.field_type, ReferenceConstant::Reference);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.target_id, "aX3p1GZUvHfd9t7mg");
         assert_eq!(field.columns, vec!["62e3851e6933ba02ad266b69"]);
         assert_eq!(field.control_type, "select");
@@ -92,13 +83,13 @@ mod tests {
             "supportsMultipleOutputMappings": false
           }"#;
         let field: MultiReferenceField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "ads1h");
-        assert_eq!(field.base.name, "multi Reference");
-        assert_eq!(field.base.key, "multi-reference");
-        assert_eq!(field.field_type, ReferenceFieldType::Reference);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "ads1h");
+        assert_eq!(field.name, "multi Reference");
+        assert_eq!(field.key, "multi-reference");
+        assert_eq!(field.field_type, ReferenceConstant::Reference);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.target_id, "aX3p1GZUvHfd9t7mg");
         assert_eq!(field.columns, vec!["62e3851e6933ba02ad266b69"]);
         assert_eq!(field.control_type, "select");
@@ -128,13 +119,13 @@ mod tests {
             "supportsMultipleOutputMappings": false
           }"#;
         let field: GridReferenceField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "a9tiq");
-        assert_eq!(field.base.name, "grid Reference");
-        assert_eq!(field.base.key, "grid-reference");
-        assert_eq!(field.field_type, ReferenceFieldType::Reference);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "a9tiq");
+        assert_eq!(field.name, "grid Reference");
+        assert_eq!(field.key, "grid-reference");
+        assert_eq!(field.field_type, ReferenceConstant::Reference);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.target_id, "aX3p1GZUvHfd9t7mg");
         assert_eq!(field.columns, vec!["62e3851e6933ba02ad266b69"]);
         assert_eq!(field.control_type, "grid");
@@ -164,13 +155,13 @@ mod tests {
             "supportsMultipleOutputMappings": false
           }"#;
         let field: CorrelationField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "avwdh");
-        assert_eq!(field.base.name, "Correlation");
-        assert_eq!(field.base.key, "correlation");
-        assert_eq!(field.field_type, ReferenceFieldType::Reference);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "avwdh");
+        assert_eq!(field.name, "Correlation");
+        assert_eq!(field.key, "correlation");
+        assert_eq!(field.field_type, ReferenceConstant::Reference);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.target_id, "aDzmDxrejKeSX3ZtE");
         assert_eq!(field.columns, vec!["642af4cfebba3602af19d8d4"]);
         assert_eq!(field.control_type, "correlation");

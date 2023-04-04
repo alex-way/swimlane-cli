@@ -1,6 +1,8 @@
 #[macro_use]
 mod util;
+pub mod constants;
 pub mod datetime;
+pub mod input_types;
 pub mod numeric;
 pub mod reference;
 pub mod selection;
@@ -8,6 +10,8 @@ pub mod text;
 pub mod users_groups;
 
 use serde::{Deserialize, Serialize};
+
+use self::constants::{AttachmentConstant, CommentsConstant, HistoryConstant, TrackingConstant};
 
 serde_enum!(FieldType, {
     None,
@@ -62,36 +66,12 @@ pub enum Field {
     History(HistoryField),
 }
 
-/// Contains all the base fields for any field in Swimlane
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct BaseField {
-    #[serde(rename = "$type")]
-    pub _type: String,
-    pub id: String,
-    pub name: String,
-    pub key: String,
-    pub supports_multiple_output_mappings: bool,
-    pub required: bool,
-    pub read_only: bool,
-}
-
-serde_enum!(AttachmentFieldType, { Attachment });
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct AttachmentsField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: AttachmentFieldType,
+define_field!(AttachmentsField, AttachmentConstant, {
     pub max_size: u64,
     pub time_to_live: Option<u64>,
     /// Comma separated list of file extensions. e.g. "jpg,png,gif"
     pub supported_file_types: Option<Vec<String>>,
-}
-
-serde_enum!(TrackingIdFieldType, { Tracking });
+});
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -107,31 +87,13 @@ pub struct TrackingIdField {
     /// Always "tracking-id"
     pub key: String,
     /// Always "tracking"
-    pub field_type: TrackingIdFieldType,
+    pub field_type: TrackingConstant,
     /// Always true
     pub read_only: bool,
     /// Always false
     pub supports_multiple_output_mappings: bool,
 }
 
-serde_enum!(CommentsFieldType, { Comments });
+define_field!(CommentsField, CommentsConstant);
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct CommentsField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: CommentsFieldType,
-}
-
-serde_enum!(HistoryFieldType, { History });
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct HistoryField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: HistoryFieldType,
-}
+define_field!(HistoryField, HistoryConstant);

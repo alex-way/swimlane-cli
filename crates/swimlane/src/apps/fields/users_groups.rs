@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
+use super::constants::{MultiConstant, SelectConstant, SingleConstant, UserGroupConstant};
 use serde::{Deserialize, Serialize};
-
-use super::BaseField;
 
 serde_enum!(UserGroupInputType, { CreatedBy, LastUpdatedBy, UserGroup });
 serde_enum!(UserGroupSelectionType, { Users, Groups });
@@ -32,21 +31,11 @@ pub struct ReverseValueMap {
 #[serde(rename_all = "camelCase")]
 pub struct UserGroupDefaultValue {}
 
-serde_enum!(UserGroupFieldType, { UserGroup });
-
 macro_rules! user_group_field {
-    ($name:ident, $control_type:expr, $selection_type:expr) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        #[serde(deny_unknown_fields)]
-        #[serde(rename_all = "camelCase")]
-        pub struct $name {
-            #[serde(flatten)]
-            pub base: BaseField,
-            pub field_type: UserGroupFieldType,
-            /// Always $control_type
-            pub control_type: String,
-            /// Always $selection_type
-            pub selection_type: String,
+    ($name:ident, $selection_type:ty) => {
+        define_field!($name, UserGroupConstant, {
+            pub control_type: SelectConstant,
+            pub selection_type: $selection_type,
             pub show_all_users: bool,
             pub show_all_groups: bool,
             pub members: Vec<UserGroupValue>,
@@ -54,11 +43,11 @@ macro_rules! user_group_field {
             pub defaults: Vec<UserGroupDefaultValue>,
             pub input_type: UserGroupInputType,
             pub reverse_value_map: ReverseValueMap,
-        }
+        });
     };
 }
 
-user_group_field!(SingleUserGroupField, "user", "single");
-user_group_field!(MultiUserGroupField, "user", "multiple");
-user_group_field!(CreatedByField, "user", "single");
-user_group_field!(LastUpdatedByField, "user", "single");
+user_group_field!(SingleUserGroupField, SingleConstant);
+user_group_field!(MultiUserGroupField, MultiConstant);
+user_group_field!(CreatedByField, SingleConstant);
+user_group_field!(LastUpdatedByField, SingleConstant);

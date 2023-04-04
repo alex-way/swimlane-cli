@@ -1,44 +1,30 @@
+use super::constants::{
+    EmailConstant, IpConstant, JsonConstant, ListConstant, MultilineConstant, RichConstant,
+    TelephoneConstant, TextConstant, UrlConstant,
+};
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
-
-serde_enum!(TextLengthType, { None, Characters, Words });
-
-serde_enum!(TextFieldType, { Text, List });
-
 macro_rules! core_text_field {
-    ($name:ident, $input_type:expr) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        #[serde(deny_unknown_fields)]
-        #[serde(rename_all = "camelCase")]
-        pub struct $name {
-            #[serde(flatten)]
-            pub base: BaseField,
-            pub field_type: TextFieldType,
+    ($name:ident, $input_type:ty) => {
+        define_field!($name, TextConstant, {
             pub prefix: String,
             pub suffix: String,
             pub placeholder: String,
-            pub input_type: String,
+            pub input_type: $input_type,
             pub length_type: TextLengthType,
             pub unique: bool,
             pub write_once: bool,
             pub visualize: bool,
             pub visualize_mode: i64,
             pub formula: Option<String>,
-        }
+        });
     };
-    ($name:ident, $input_type:expr, min_max_length = true) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        #[serde(deny_unknown_fields)]
-        #[serde(rename_all = "camelCase")]
-        pub struct $name {
-            #[serde(flatten)]
-            pub base: BaseField,
-            pub field_type: TextFieldType,
+    ($name:ident, $input_type:ty, min_max_length = true) => {
+        define_field!($name, TextConstant, {
             pub prefix: String,
             pub suffix: String,
             pub placeholder: String,
-            pub input_type: String,
+            pub input_type: $input_type,
             pub length_type: TextLengthType,
             pub unique: bool,
             pub write_once: bool,
@@ -47,33 +33,31 @@ macro_rules! core_text_field {
             pub formula: Option<String>,
             pub min_length: Option<u64>,
             pub max_length: Option<u64>,
-        }
+        });
     };
 }
 
-core_text_field!(SingleLineTextField, "text", min_max_length = true);
-core_text_field!(MultiLineTextField, "multiline", min_max_length = true);
-core_text_field!(EmailField, "email");
-core_text_field!(TelephoneField, "telephone");
-core_text_field!(UrlField, "url");
-core_text_field!(IpAddressField, "ip");
-core_text_field!(RichTextField, "rich");
-core_text_field!(JsonField, "json");
+serde_enum!(TextLengthType, { None, Characters, Words });
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct TextListField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: TextFieldType,
-    pub input_type: String,
+core_text_field!(SingleLineTextField, TextConstant, min_max_length = true);
+core_text_field!(MultiLineTextField, MultilineConstant, min_max_length = true);
+core_text_field!(EmailField, EmailConstant);
+core_text_field!(TelephoneField, TelephoneConstant);
+core_text_field!(UrlField, UrlConstant);
+core_text_field!(IpAddressField, IpConstant);
+core_text_field!(RichTextField, RichConstant);
+core_text_field!(JsonField, JsonConstant);
+
+define_field!(TextListField, ListConstant, {
+    pub input_type: TextConstant,
     pub item_length_type: TextLengthType,
     pub item_step: i64,
-}
+});
 
 #[cfg(test)]
 mod tests {
+    use crate::apps::fields::constants::JsonConstant;
+
     use super::*;
 
     #[test]
@@ -100,17 +84,17 @@ mod tests {
 
         let field: SingleLineTextField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "aocn0");
-        assert_eq!(field.base.name, "single line");
-        assert_eq!(field.base.key, "single-line");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "aocn0");
+        assert_eq!(field.name, "single line");
+        assert_eq!(field.key, "single-line");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "text");
+        assert_eq!(field.input_type, TextConstant::Text);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -142,17 +126,17 @@ mod tests {
 
         let field: MultiLineTextField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "aynwz");
-        assert_eq!(field.base.name, "multi line");
-        assert_eq!(field.base.key, "multi-line");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "aynwz");
+        assert_eq!(field.name, "multi line");
+        assert_eq!(field.key, "multi-line");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "multiline");
+        assert_eq!(field.input_type, MultilineConstant::Multiline);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -183,17 +167,17 @@ mod tests {
         }"#;
 
         let field: EmailField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "apaz2");
-        assert_eq!(field.base.name, "Email");
-        assert_eq!(field.base.key, "email");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "apaz2");
+        assert_eq!(field.name, "Email");
+        assert_eq!(field.key, "email");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "email");
+        assert_eq!(field.input_type, EmailConstant::Email);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -225,17 +209,17 @@ mod tests {
 
         let field: TelephoneField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "alixu");
-        assert_eq!(field.base.name, "Telephone");
-        assert_eq!(field.base.key, "telephone");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "alixu");
+        assert_eq!(field.name, "Telephone");
+        assert_eq!(field.key, "telephone");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "telephone");
+        assert_eq!(field.input_type, TelephoneConstant::Telephone);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -267,17 +251,17 @@ mod tests {
 
         let field: UrlField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "a8sms");
-        assert_eq!(field.base.name, "URL");
-        assert_eq!(field.base.key, "url");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "a8sms");
+        assert_eq!(field.name, "URL");
+        assert_eq!(field.key, "url");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "url");
+        assert_eq!(field.input_type, UrlConstant::Url);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -309,17 +293,17 @@ mod tests {
 
         let field: IpAddressField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "avni6");
-        assert_eq!(field.base.name, "IP");
-        assert_eq!(field.base.key, "ip");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "avni6");
+        assert_eq!(field.name, "IP");
+        assert_eq!(field.key, "ip");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "ip");
+        assert_eq!(field.input_type, IpConstant::Ip);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -351,17 +335,17 @@ mod tests {
 
         let field: RichTextField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "afftg");
-        assert_eq!(field.base.name, "Rich Text");
-        assert_eq!(field.base.key, "rich-text");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "afftg");
+        assert_eq!(field.name, "Rich Text");
+        assert_eq!(field.key, "rich-text");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "rich");
+        assert_eq!(field.input_type, RichConstant::Rich);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -393,17 +377,17 @@ mod tests {
 
         let field: JsonField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "a7h9k");
-        assert_eq!(field.base.name, "JSON");
-        assert_eq!(field.base.key, "json");
-        assert_eq!(field.field_type, TextFieldType::Text);
-        assert!(!field.base.required);
-        assert!(field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
+        assert_eq!(field.id, "a7h9k");
+        assert_eq!(field.name, "JSON");
+        assert_eq!(field.key, "json");
+        assert_eq!(field.field_type, TextConstant::Text);
+        assert!(!field.required);
+        assert!(field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");
         assert_eq!(field.placeholder, "");
-        assert_eq!(field.input_type, "json");
+        assert_eq!(field.input_type, JsonConstant::Json);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
         assert!(!field.write_once);
@@ -429,14 +413,14 @@ mod tests {
 
         let field: TextListField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "ag4kq");
-        assert_eq!(field.base.name, "Text List");
-        assert_eq!(field.base.key, "text-list");
-        assert_eq!(field.field_type, TextFieldType::List);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(field.base.supports_multiple_output_mappings);
-        assert_eq!(field.input_type, "text");
+        assert_eq!(field.id, "ag4kq");
+        assert_eq!(field.name, "Text List");
+        assert_eq!(field.key, "text-list");
+        assert_eq!(field.field_type, ListConstant::List);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(field.supports_multiple_output_mappings);
+        assert_eq!(field.input_type, TextConstant::Text);
         assert_eq!(field.item_length_type, TextLengthType::None);
         assert_eq!(field.item_step, 0);
     }

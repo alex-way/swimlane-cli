@@ -1,8 +1,8 @@
+use super::constants::{
+    CheckboxConstant, MultiConstant, RadioConstant, SelectConstant, SingleConstant,
+    ValuesListConstant,
+};
 use serde::{Deserialize, Serialize};
-
-use super::BaseField;
-
-serde_enum!(SelectionFieldType, { ValuesList });
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
@@ -21,27 +21,19 @@ pub struct ValuesListValue {
 }
 
 macro_rules! selection_field {
-    ($name:ident, $control_type:expr, $selection_type:expr) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        #[serde(deny_unknown_fields)]
-        #[serde(rename_all = "camelCase")]
-        pub struct $name {
-            #[serde(flatten)]
-            pub base: BaseField,
-            pub field_type: SelectionFieldType,
+    ($name:ident, $control_type:ty, $selection_type:ty) => {
+      define_field!($name, ValuesListConstant, {
             pub values: Vec<ValuesListValue>,
-            /// Always $control_type
-            pub control_type: String,
-            /// Always $selection_type
-            pub selection_type: String,
-        }
+            pub control_type: $control_type,
+            pub selection_type: $selection_type,
+        });
     };
 }
 
-selection_field!(SingleSelectField, "select", "single");
-selection_field!(MultiSelectField, "select", "multi");
-selection_field!(RadioButtonsField, "radio", "single");
-selection_field!(CheckboxesField, "checkbox", "multi");
+selection_field!(SingleSelectField, SelectConstant, SingleConstant);
+selection_field!(MultiSelectField, SelectConstant, MultiConstant);
+selection_field!(RadioButtonsField, RadioConstant, SingleConstant);
+selection_field!(CheckboxesField, CheckboxConstant, MultiConstant);
 
 #[cfg(test)]
 mod tests {
@@ -88,10 +80,10 @@ mod tests {
 
         let field: SingleSelectField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "asfyh");
-        assert_eq!(field.base.name, "single Select");
-        assert_eq!(field.base.key, "single-select");
-        assert_eq!(field.field_type, SelectionFieldType::ValuesList);
+        assert_eq!(field.id, "asfyh");
+        assert_eq!(field.name, "single Select");
+        assert_eq!(field.key, "single-select");
+        assert_eq!(field.field_type, ValuesListConstant::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
@@ -150,10 +142,10 @@ mod tests {
 
         let field: MultiSelectField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "asfyh");
-        assert_eq!(field.base.name, "multi Select");
-        assert_eq!(field.base.key, "multi-select");
-        assert_eq!(field.field_type, SelectionFieldType::ValuesList);
+        assert_eq!(field.id, "asfyh");
+        assert_eq!(field.name, "multi Select");
+        assert_eq!(field.key, "multi-select");
+        assert_eq!(field.field_type, ValuesListConstant::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
@@ -212,10 +204,10 @@ mod tests {
 
         let field: RadioButtonsField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "asfyh");
-        assert_eq!(field.base.name, "radio buttons");
-        assert_eq!(field.base.key, "radio-buttons");
-        assert_eq!(field.field_type, SelectionFieldType::ValuesList);
+        assert_eq!(field.id, "asfyh");
+        assert_eq!(field.name, "radio buttons");
+        assert_eq!(field.key, "radio-buttons");
+        assert_eq!(field.field_type, ValuesListConstant::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
@@ -274,10 +266,10 @@ mod tests {
 
         let field: CheckboxesField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "a5jd9");
-        assert_eq!(field.base.name, "Checkboxes");
-        assert_eq!(field.base.key, "checkboxes");
-        assert_eq!(field.field_type, SelectionFieldType::ValuesList);
+        assert_eq!(field.id, "a5jd9");
+        assert_eq!(field.name, "Checkboxes");
+        assert_eq!(field.key, "checkboxes");
+        assert_eq!(field.field_type, ValuesListConstant::ValuesList);
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "642afdc6c0476e1ea9a0138e");
         assert_eq!(field.values[0].name, "test2");

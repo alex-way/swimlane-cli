@@ -1,27 +1,20 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::BaseField;
+use super::constants::{
+    DateConstant, DateTimeConstant, FirstCreatedConstant, LastUpdatedConstant, TimeConstant,
+    TimespanConstant,
+};
 
 // Used for DateField to specify the minMode field
 serde_enum!(DateFieldMinMode, { Day, Month, Year });
-
 serde_enum!(DateTimeFieldFuturePastType, { Minutes, Hours, Days, Months, Years });
 
 // Used for DateField to specify the defaultValueType field
 serde_enum!(DateTimeFieldDefaultValueType, { Future, Specific });
 
-serde_enum!(DateTimeFieldType, { Date });
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct DateField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: DateTimeFieldType,
-    /// Always "date"
-    pub input_type: String,
+define_field!(DateField, DateConstant, {
+    pub input_type: DateConstant,
     pub min_mode: DateFieldMinMode,
     pub default_value_type: DateTimeFieldDefaultValueType,
     pub default_value: Option<DateTime<Utc>>,
@@ -29,20 +22,13 @@ pub struct DateField {
     pub future_past_value: i64,
     pub calculated_diff: bool,
     pub formula: Option<String>,
-}
+});
 
 // Used for TimeField to specify the futurePastType field
 serde_enum!(TimeFieldFuturePastType, { Minutes, Hours });
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct TimeField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: DateTimeFieldType,
-    /// Always "time"
-    pub input_type: String,
+define_field!(TimeField, DateConstant, {
+    pub input_type: TimeConstant,
     pub default_value_type: DateTimeFieldDefaultValueType,
     /// ISO 8601 datetime for 1970-01-01T00:00:00Z. e.g. "1970-01-01T13:30:00Z"
     pub default_value: Option<DateTime<Utc>>,
@@ -50,17 +36,10 @@ pub struct TimeField {
     pub future_past_value: i64,
     pub calculated_diff: bool,
     pub formula: Option<String>,
-}
+});
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct DateTimeField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: DateTimeFieldType,
-    /// Always "dateTime"
-    pub input_type: String,
+define_field!(DateTimeField, DateConstant, {
+    pub input_type: DateTimeConstant,
     pub default_value_type: DateTimeFieldDefaultValueType,
     /// ISO 8601 datetime for 1970-01-01T00:00:00Z. e.g. "1970-01-01T13:30:00Z"
     pub default_value: Option<DateTime<Utc>>,
@@ -68,7 +47,7 @@ pub struct DateTimeField {
     pub future_past_value: i64,
     pub calculated_diff: bool,
     pub formula: Option<String>,
-}
+});
 
 /// Used for TimeSpanField to specify the start and end fields
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -79,46 +58,32 @@ pub struct TimeSpan {
     pub end_field: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-#[serde(rename_all = "camelCase")]
-pub struct TimeSpanField {
-    #[serde(flatten)]
-    pub base: BaseField,
-    pub field_type: DateTimeFieldType,
-    /// Always "timespan"
-    pub input_type: String,
+define_field!(TimeSpanField, DateConstant, {
+    pub input_type: TimespanConstant,
     pub default_value_type: String,
     pub future_past_value: i64,
     pub calculated_diff: bool,
     #[serde(flatten)]
     pub time_span: Option<TimeSpan>,
     pub formula: Option<String>,
-}
+});
 
 serde_enum!(FirstCreatedLastUpdatedDefaultValueType, { None });
 
 // A simple macro to encapsulate the "First Created" and "Last Updated" fields in Swimlane.
 macro_rules! builtin_date_field {
-    ($name:ident, $input_type:expr) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        #[serde(deny_unknown_fields)]
-        #[serde(rename_all = "camelCase")]
-        pub struct $name {
-            #[serde(flatten)]
-            pub base: BaseField,
-            pub field_type: DateTimeFieldType,
-            /// Always $input_type
-            pub input_type: String,
+    ($name:ident, $input_type:ty) => {
+        define_field!($name, DateConstant, {
+            pub input_type: $input_type,
             pub default_value_type: FirstCreatedLastUpdatedDefaultValueType,
             pub future_past_value: i64,
             pub calculated_diff: bool,
-        }
+        });
     };
 }
 
-builtin_date_field!(FirstCreatedField, "firstCreated");
-builtin_date_field!(LastUpdatedField, "lastUpdated");
+builtin_date_field!(FirstCreatedField, FirstCreatedConstant);
+builtin_date_field!(LastUpdatedField, LastUpdatedConstant);
 
 #[cfg(test)]
 mod tests {
@@ -143,14 +108,14 @@ mod tests {
 
         let field: FirstCreatedField = serde_json::from_str(json).unwrap();
 
-        assert_eq!(field.base.id, "awohj");
-        assert_eq!(field.base.name, "First Created");
-        assert_eq!(field.base.key, "first-created");
-        assert_eq!(field.field_type, DateTimeFieldType::Date);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
-        assert_eq!(field.input_type, "firstCreated");
+        assert_eq!(field.id, "awohj");
+        assert_eq!(field.name, "First Created");
+        assert_eq!(field.key, "first-created");
+        assert_eq!(field.field_type, DateConstant::Date);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
+        assert_eq!(field.input_type, FirstCreatedConstant::FirstCreated);
         assert_eq!(
             field.default_value_type,
             FirstCreatedLastUpdatedDefaultValueType::None
@@ -176,14 +141,14 @@ mod tests {
 			"supportsMultipleOutputMappings": false
 		}"#;
         let field: LastUpdatedField = serde_json::from_str(json).unwrap();
-        assert_eq!(field.base.id, "adb8i");
-        assert_eq!(field.base.name, "Last Updated");
-        assert_eq!(field.base.key, "last-updated");
-        assert_eq!(field.field_type, DateTimeFieldType::Date);
-        assert!(!field.base.required);
-        assert!(!field.base.read_only);
-        assert!(!field.base.supports_multiple_output_mappings);
-        assert_eq!(field.input_type, "lastUpdated");
+        assert_eq!(field.id, "adb8i");
+        assert_eq!(field.name, "Last Updated");
+        assert_eq!(field.key, "last-updated");
+        assert_eq!(field.field_type, DateConstant::Date);
+        assert!(!field.required);
+        assert!(!field.read_only);
+        assert!(!field.supports_multiple_output_mappings);
+        assert_eq!(field.input_type, LastUpdatedConstant::LastUpdated);
         assert_eq!(
             field.default_value_type,
             FirstCreatedLastUpdatedDefaultValueType::None
