@@ -52,6 +52,8 @@ define_field!(TextListField, ListConstant, {
     pub input_type: TextConstant,
     pub item_length_type: TextLengthType,
     pub item_step: i64,
+    pub min_items: Option<i64>,
+    pub max_items: Option<i64>,
 });
 
 #[cfg(test)]
