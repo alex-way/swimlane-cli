@@ -8,6 +8,7 @@ pub mod roles;
 pub mod tasks;
 pub mod users;
 pub mod workflows;
+pub mod workspaces;
 
 use error::SwimlaneClientError;
 use reqwest::{header::HeaderMap, Client, ClientBuilder};

@@ -15,6 +15,29 @@ pub struct SwimlaneMigrator {
     pub from: SwimlaneClient,
     pub to: SwimlaneClient,
     pub dry_run: bool,
+    from_normaliser: adapt::SwimlaneResourceNormaliser,
+    to_normaliser: adapt::SwimlaneResourceNormaliser,
+}
+
+impl SwimlaneMigrator {
+    pub fn new(
+        from: SwimlaneClient,
+        to: SwimlaneClient,
+        dry_run: bool,
+    ) -> Result<Self, SwimlaneMigratorNewError> {
+        if from.base_url == to.base_url {
+            return Err(SwimlaneMigratorNewError::SourceAndDestinationAreIdentical);
+        }
+        let from_normaliser = adapt::SwimlaneResourceNormaliser::new(from.clone());
+        let to_normaliser = adapt::SwimlaneResourceNormaliser::new(to.clone());
+        Ok(SwimlaneMigrator {
+            from,
+            to,
+            dry_run,
+            from_normaliser,
+            to_normaliser,
+        })
+    }
 }
 
 #[derive(Error, Debug)]
@@ -46,17 +69,4 @@ pub enum MigrationPlan<T: LooksLike> {
     Delete {
         destination_resource: T,
     },
-}
-
-impl SwimlaneMigrator {
-    pub fn new(
-        from: SwimlaneClient,
-        to: SwimlaneClient,
-        dry_run: bool,
-    ) -> Result<Self, SwimlaneMigratorNewError> {
-        if from.base_url == to.base_url {
-            return Err(SwimlaneMigratorNewError::SourceAndDestinationAreIdentical);
-        }
-        Ok(SwimlaneMigrator { from, to, dry_run })
-    }
 }

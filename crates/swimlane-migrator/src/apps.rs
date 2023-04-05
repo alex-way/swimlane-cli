@@ -225,12 +225,23 @@ impl LooksLike for Field {
     }
 }
 
+impl LooksLike for String {
+    fn is_same_resource(&self, other: &Self) -> bool {
+        self == other
+    }
+
+    fn differences(&self, _other: &Self) -> Vec<Difference> {
+        vec![]
+    }
+}
+
 impl LooksLike for Application {
     fn differences(&self, other: &Self) -> Vec<Difference> {
         let mut differences = vec![];
 
         // Add warning if the name is different
         push_difference!(differences, "name", &self.name, &other.name);
+        push_difference!(differences, "acronym", &self.acronym, &other.acronym);
         push_difference!(differences, "disabled", &self.disabled, &other.disabled);
         push_difference!(differences, "description", &self.description, &other.description, optional: true);
         push_difference!(
@@ -268,10 +279,39 @@ impl LooksLike for Application {
             }
         });
 
-        // todo: handle acronym change?
-        // todo: handle workspaces by converting IDs to names
-        // todo: handle permissions by converting IDs to names
-        // todo: handle layout
+        self.workspaces.iter().for_each(|workspace| {
+            let this_field = other
+                .workspaces
+                .iter()
+                .find(|this_field| workspace.is_same_resource(this_field));
+            if this_field.is_none() {
+                differences.push(Difference::AddingItem {
+                    field: "workspaces".to_string(),
+                    item: workspace.to_owned(),
+                });
+            }
+        });
+
+        other.workspaces.iter().for_each(|workspace| {
+            let this_field = self
+                .workspaces
+                .iter()
+                .find(|this_field| workspace.is_same_resource(this_field));
+            if this_field.is_none() {
+                differences.push(Difference::RemovingItem {
+                    field: "workspaces".to_string(),
+                    item: workspace.to_owned(),
+                });
+            }
+        });
+
+        // if !self.layout.looks_like(other.layout) {
+        //     differences.push(Difference::UpdatingComplexField {
+        //         field: "layout".to_string(),
+        //     });
+        // }
+
+        differences.extend(self.permissions.differences(&other.permissions));
 
         differences
     }
@@ -287,15 +327,49 @@ impl SwimlaneMigrator {
     ) -> Result<Vec<MigrationPlan<Application>>, SwimlaneMigratorError> {
         let source_apps_future = self.from.get_applications();
         let destination_apps_future = self.to.get_applications();
+        let source_workspace_hashmap = self.from_normaliser.get_workspace_hashmap();
+        let destination_workspace_hashmap = self.to_normaliser.get_workspace_hashmap();
 
-        let _source_workflows_future = self.from.get_workflows().await?;
-        let _destination_workflows_future = self.to.get_workflows().await?;
+        // normalise the apps
+        let source_apps = source_apps_future.await?;
+        let destination_apps = destination_apps_future.await?;
+        let source_workspace_hashmap = source_workspace_hashmap.await;
+        let destination_workspace_hashmap = destination_workspace_hashmap.await;
 
-        self.get_resources_to_migrate(source_apps_future, destination_apps_future)
-            .await
+        let source_apps = source_apps
+            .into_iter()
+            .map(|app| {
+                self.from_normaliser
+                    .normalise_application(&app, &source_workspace_hashmap)
+            })
+            .collect::<Vec<Application>>();
+
+        let destination_apps = destination_apps
+            .into_iter()
+            .map(|app| {
+                self.from_normaliser
+                    .normalise_application(&app, &destination_workspace_hashmap)
+            })
+            .collect::<Vec<Application>>();
+
+        self._get_resources_to_migrate(source_apps, destination_apps)
     }
 
     pub async fn migrate_apps(&self) -> Result<(), SwimlaneMigratorError> {
-        todo!()
+        let plans = self.get_apps_to_migrate().await?;
+        for plan in &plans {
+            if let MigrationPlan::Create { source_resource } = plan {
+                let mut blank_app = source_resource.clone();
+                blank_app.fields = vec![];
+                blank_app.layout = vec![];
+                self.to.create_application(&blank_app).await?;
+            }
+        }
+        Ok(())
+        // Create empty applications
+        // Migrate fields
+        // Migrate Tasks
+        // Migrate Workflows
+        // Migrate Layout
     }
 }

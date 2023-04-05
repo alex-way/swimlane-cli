@@ -16,7 +16,11 @@ impl LooksLike for User {
         // todo: Convert from ID to name somehow
         // push_difference!(diffs, "default_dashboard_id", &self.default_dashboard_id, &other.default_dashboard_id, optional: true);
         // todo: Reduce the migrationplan output for avatar as it's a base64encoded string.
-        push_difference!(diffs, "avatar", &self.avatar, &other.avatar, optional: true);
+        if self.avatar != other.avatar {
+            diffs.push(Difference::UpdatingComplexField {
+                field: "avatar".to_string(),
+            });
+        }
         push_difference!(diffs, "timezone_id", &self.timezone_id, &other.timezone_id);
         push_difference!(diffs, "email", &self.email, &other.email);
         push_difference!(diffs, "phone_number", &self.phone_number, &other.phone_number, optional: true);

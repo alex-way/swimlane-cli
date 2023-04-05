@@ -98,6 +98,23 @@ impl SwimlaneClient {
 
         Ok(apps)
     }
+
+    pub async fn create_application(
+        &self,
+        app: &Application,
+    ) -> Result<Application, SwimlaneClientError> {
+        let url = format!("{}/api/app", self.base_url);
+        let app: Application = self
+            .http_client
+            .post(url)
+            .json(app)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        Ok(app)
+    }
 }
 
 #[cfg(test)]

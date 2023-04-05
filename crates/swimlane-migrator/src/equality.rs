@@ -17,6 +17,11 @@ pub enum Difference {
         field: String,
         item: String,
     },
+    /// Used for when the field is a complex type. For example the application type,
+    /// where it wouldn't be possible to display the difference coherently.
+    UpdatingComplexField {
+        field: String,
+    },
 }
 
 macro_rules! push_difference {
@@ -40,7 +45,6 @@ macro_rules! push_difference {
             });
         }
     };
-    // todo: annotate source_vec and target_vec to only allow iterators which implement LooksLike Trait
     ($differences:expr, $field:literal, $source_vec:expr, $target_vec:expr, vec: true) => {
         $differences.extend($source_vec.iter().filter_map(|item| {
             let item_exists = $target_vec
@@ -82,6 +86,9 @@ impl Display for Difference {
             }
             Difference::RemovingItem { field, item } => {
                 write!(f, "-{}: {}", field, item)
+            }
+            Difference::UpdatingComplexField { field } => {
+                write!(f, "{} will be updated", field)
             }
         }
     }
