@@ -1,3 +1,5 @@
+#[macro_use]
+mod util;
 pub mod apps;
 pub mod error;
 pub mod groups;
@@ -5,7 +7,6 @@ pub mod python;
 pub mod roles;
 pub mod tasks;
 pub mod users;
-mod util;
 pub mod workflows;
 
 use error::SwimlaneClientError;

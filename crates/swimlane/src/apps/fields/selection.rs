@@ -12,12 +12,12 @@ pub struct ValuesListValue {
     pub _type: String,
     pub id: String,
     pub name: String,
-    pub selected: bool,
-    pub description: String,
-    pub other_text: bool,
-    pub other_text_description: String,
-    pub other_text_default_value: String,
-    pub other_text_required: String,
+    pub selected: Option<bool>,
+    pub description: Option<String>,
+    pub other_text: Option<bool>,
+    pub other_text_description: Option<String>,
+    pub other_text_default_value: Option<String>,
+    pub other_text_required: Option<String>,
 }
 
 macro_rules! selection_field {
@@ -87,18 +87,8 @@ mod tests {
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
-        assert!(!field.values[0].selected);
-        assert_eq!(field.values[0].description, "");
-        assert!(!field.values[0].other_text);
-        assert_eq!(field.values[0].other_text_description, "");
-        assert_eq!(field.values[0].other_text_default_value, "");
-        assert_eq!(field.values[0].other_text_required, "");
         assert_eq!(field.values[1].id, "2");
         assert_eq!(field.values[1].name, "Value 2");
-        assert!(!field.values[1].selected);
-        assert_eq!(field.values[1].description, "");
-        assert!(!field.values[1].other_text);
-        assert_eq!(field.values[1].other_text_description, "");
     }
 
     #[test]
@@ -149,18 +139,8 @@ mod tests {
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
-        assert!(!field.values[0].selected);
-        assert_eq!(field.values[0].description, "");
-        assert!(!field.values[0].other_text);
-        assert_eq!(field.values[0].other_text_description, "");
-        assert_eq!(field.values[0].other_text_default_value, "");
-        assert_eq!(field.values[0].other_text_required, "");
         assert_eq!(field.values[1].id, "2");
         assert_eq!(field.values[1].name, "Value 2");
-        assert!(!field.values[1].selected);
-        assert_eq!(field.values[1].description, "");
-        assert!(!field.values[1].other_text);
-        assert_eq!(field.values[1].other_text_description, "");
     }
 
     #[test]
@@ -211,18 +191,8 @@ mod tests {
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "1");
         assert_eq!(field.values[0].name, "Value 1");
-        assert!(!field.values[0].selected);
-        assert_eq!(field.values[0].description, "");
-        assert!(!field.values[0].other_text);
-        assert_eq!(field.values[0].other_text_description, "");
-        assert_eq!(field.values[0].other_text_default_value, "");
-        assert_eq!(field.values[0].other_text_required, "");
         assert_eq!(field.values[1].id, "2");
         assert_eq!(field.values[1].name, "Value 2");
-        assert!(!field.values[1].selected);
-        assert_eq!(field.values[1].description, "");
-        assert!(!field.values[1].other_text);
-        assert_eq!(field.values[1].other_text_description, "");
     }
 
     #[test]
@@ -273,19 +243,7 @@ mod tests {
         assert_eq!(field.values.len(), 2);
         assert_eq!(field.values[0].id, "642afdc6c0476e1ea9a0138e");
         assert_eq!(field.values[0].name, "test2");
-        assert!(!field.values[0].selected);
-        assert_eq!(field.values[0].description, "<p>test</p>");
-        assert!(!field.values[0].other_text);
-        assert_eq!(field.values[0].other_text_description, "");
-        assert_eq!(field.values[0].other_text_default_value, "");
-        assert_eq!(field.values[0].other_text_required, "False");
         assert_eq!(field.values[1].id, "642afdbf9e2b6a5fca95f60b");
         assert_eq!(field.values[1].name, "test");
-        assert!(field.values[1].selected);
-        assert_eq!(field.values[1].description, "");
-        assert!(!field.values[1].other_text);
-        assert_eq!(field.values[1].other_text_description, "");
-        assert_eq!(field.values[1].other_text_default_value, "");
-        assert_eq!(field.values[1].other_text_required, "False");
     }
 }

@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 use super::constants::{ListConstant, NumericConstant};
 
 define_field!(NumericField, NumericConstant, {
-    pub step: u64,
+    pub step: f64,
     pub unique: bool,
     pub prefix: String,
     pub suffix: String,
     pub format: String,
-    pub min: Option<i64>,
-    pub max: Option<i64>,
+    pub min: Option<f64>,
+    pub max: Option<f64>,
     pub formula: Option<String>,
 });
 
@@ -53,7 +53,6 @@ mod tests {
         assert!(!field.required);
         assert!(!field.read_only);
         assert!(!field.supports_multiple_output_mappings);
-        assert_eq!(field.step, 1);
         assert!(!field.unique);
         assert_eq!(field.prefix, "");
         assert_eq!(field.suffix, "");

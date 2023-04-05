@@ -11,14 +11,14 @@ serde_enum!(DateFieldMinMode, { Day, Month, Year });
 serde_enum!(DateTimeFieldFuturePastType, { Minutes, Hours, Days, Months, Years });
 
 // Used for DateField to specify the defaultValueType field
-serde_enum!(DateTimeFieldDefaultValueType, { Future, Specific });
+serde_enum!(DateTimeFieldDefaultValueType, { None, Future, Specific, Current });
 
 define_field!(DateField, DateConstant, {
     pub input_type: DateConstant,
-    pub min_mode: DateFieldMinMode,
+    pub min_mode: Option<DateFieldMinMode>,
     pub default_value_type: DateTimeFieldDefaultValueType,
     pub default_value: Option<DateTime<Utc>>,
-    pub future_past_type: DateTimeFieldFuturePastType,
+    pub future_past_type: Option<DateTimeFieldFuturePastType>,
     pub future_past_value: i64,
     pub calculated_diff: bool,
     pub formula: Option<String>,
@@ -32,7 +32,7 @@ define_field!(TimeField, DateConstant, {
     pub default_value_type: DateTimeFieldDefaultValueType,
     /// ISO 8601 datetime for 1970-01-01T00:00:00Z. e.g. "1970-01-01T13:30:00Z"
     pub default_value: Option<DateTime<Utc>>,
-    pub future_past_type: TimeFieldFuturePastType,
+    pub future_past_type: Option<TimeFieldFuturePastType>,
     pub future_past_value: i64,
     pub calculated_diff: bool,
     pub formula: Option<String>,
@@ -43,28 +43,19 @@ define_field!(DateTimeField, DateConstant, {
     pub default_value_type: DateTimeFieldDefaultValueType,
     /// ISO 8601 datetime for 1970-01-01T00:00:00Z. e.g. "1970-01-01T13:30:00Z"
     pub default_value: Option<DateTime<Utc>>,
-    pub future_past_type: DateTimeFieldFuturePastType,
+    pub future_past_type: Option<DateTimeFieldFuturePastType>,
     pub future_past_value: i64,
     pub calculated_diff: bool,
     pub formula: Option<String>,
 });
-
-/// Used for TimeSpanField to specify the start and end fields
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TimeSpan {
-    #[serde(rename = "timeSpanDiffStartField")]
-    pub start_field: String,
-    #[serde(rename = "timeSpanDiffEndField")]
-    pub end_field: String,
-}
 
 define_field!(TimeSpanField, DateConstant, {
     pub input_type: TimespanConstant,
     pub default_value_type: String,
     pub future_past_value: i64,
     pub calculated_diff: bool,
-    #[serde(flatten)]
-    pub time_span: Option<TimeSpan>,
+    pub time_span_diff_start_field: String,
+    pub time_span_diff_end_field: String,
     pub formula: Option<String>,
 });
 
@@ -88,6 +79,48 @@ builtin_date_field!(LastUpdatedField, LastUpdatedConstant);
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_datetime_field_deserializes() {
+        let json = r#"{
+            "$type":"Core.Models.Fields.Date.DateField, Core",
+            "inputType":"dateTime",
+            "defaultValueType":"none",
+            "futurePastType":"hours",
+            "futurePastValue":0,
+            "calculatedDiff":false,
+            "id":"aPDaSsV9gpGyS0Ki5",
+            "name":"Last Teams Message Sent Timestamp",
+            "key":"last-teams-msg-sent-timestamp",
+            "fieldType":"date",
+            "required":false,
+            "readOnly":false,
+            "supportsMultipleOutputMappings":false
+        }"#;
+
+        let _field: DateTimeField = serde_json::from_str(json).unwrap();
+    }
+
+    #[test]
+    fn test_date_field_deserializes() {
+        let json = r#"{
+            "$type": "Core.Models.Fields.Date.DateField, Core",
+            "inputType": "date",
+            "defaultValueType": "none",
+            "futurePastType": "hours",
+            "futurePastValue": 0,
+            "calculatedDiff": false,
+            "id": "a65un",
+            "name": "End Date",
+            "key": "end-date",
+            "fieldType": "date",
+            "required": false,
+            "readOnly": false,
+            "supportsMultipleOutputMappings": false
+          }"#;
+
+        let _field: DateField = serde_json::from_str(json).unwrap();
+    }
 
     #[test]
     fn test_default_first_created_field_deserializes() {

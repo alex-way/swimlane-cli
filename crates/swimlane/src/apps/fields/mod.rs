@@ -66,6 +66,46 @@ pub enum Field {
     History(HistoryField),
 }
 
+impl Field {
+    pub fn name(&self) -> String {
+        match self {
+            Field::SingleLineText(field) => field.name.clone(),
+            Field::MultiLineText(field) => field.name.clone(),
+            Field::Email(field) => field.name.clone(),
+            Field::Telephone(field) => field.name.clone(),
+            Field::Url(field) => field.name.clone(),
+            Field::IpAddress(field) => field.name.clone(),
+            Field::RichText(field) => field.name.clone(),
+            Field::Json(field) => field.name.clone(),
+            Field::TextList(field) => field.name.clone(),
+            Field::Numeric(field) => field.name.clone(),
+            Field::NumericList(field) => field.name.clone(),
+            Field::DateTime(field) => field.name.clone(),
+            Field::Date(field) => field.name.clone(),
+            Field::Time(field) => field.name.clone(),
+            Field::TimeSpan(field) => field.name.clone(),
+            Field::FirstCreated(field) => field.name.clone(),
+            Field::LastUpdated(field) => field.name.clone(),
+            Field::SingleSelect(field) => field.name.clone(),
+            Field::MultiSelect(field) => field.name.clone(),
+            Field::RadioButtons(field) => field.name.clone(),
+            Field::Checkboxes(field) => field.name.clone(),
+            Field::SingleUserGroup(field) => field.name.clone(),
+            Field::MultiUserGroup(field) => field.name.clone(),
+            Field::CreatedBy(field) => field.name.clone(),
+            Field::LastUpdatedBy(field) => field.name.clone(),
+            Field::Correlation(field) => field.name.clone(),
+            Field::SingleReference(field) => field.name.clone(),
+            Field::MultiReference(field) => field.name.clone(),
+            Field::GridReference(field) => field.name.clone(),
+            Field::TrackingId(field) => field.name.clone(),
+            Field::Attachment(field) => field.name.clone(),
+            Field::Comments(field) => field.name.clone(),
+            Field::History(field) => field.name.clone(),
+        }
+    }
+}
+
 define_field!(AttachmentsField, AttachmentConstant, {
     pub max_size: u64,
     pub time_to_live: Option<u64>,
@@ -86,7 +126,6 @@ pub struct TrackingIdField {
     pub name: String,
     /// Always "tracking-id"
     pub key: String,
-    /// Always "tracking"
     pub field_type: TrackingConstant,
     /// Always true
     pub read_only: bool,
@@ -95,5 +134,4 @@ pub struct TrackingIdField {
 }
 
 define_field!(CommentsField, CommentsConstant);
-
 define_field!(HistoryField, HistoryConstant);

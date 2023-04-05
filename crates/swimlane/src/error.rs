@@ -23,6 +23,8 @@ pub enum SwimlaneClientError {
     ReqwestError(#[from] ReqwestError),
     #[error("Parse Error")]
     ParseError(#[from] url::ParseError),
+    #[error("Decoding Error")]
+    DeserializationError(#[from] serde_json::Error),
 }
 
 #[derive(Debug, Clone)]

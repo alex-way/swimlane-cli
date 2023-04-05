@@ -13,7 +13,7 @@ macro_rules! core_text_field {
             pub input_type: $input_type,
             pub length_type: TextLengthType,
             pub unique: bool,
-            pub write_once: bool,
+            pub write_once: Option<bool>,
             pub visualize: bool,
             pub visualize_mode: i64,
             pub formula: Option<String>,
@@ -27,7 +27,7 @@ macro_rules! core_text_field {
             pub input_type: $input_type,
             pub length_type: TextLengthType,
             pub unique: bool,
-            pub write_once: bool,
+            pub write_once: Option<bool>,
             pub visualize: bool,
             pub visualize_mode: i64,
             pub formula: Option<String>,
@@ -97,7 +97,6 @@ mod tests {
         assert_eq!(field.input_type, TextConstant::Text);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -139,7 +138,6 @@ mod tests {
         assert_eq!(field.input_type, MultilineConstant::Multiline);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -180,7 +178,6 @@ mod tests {
         assert_eq!(field.input_type, EmailConstant::Email);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -222,7 +219,6 @@ mod tests {
         assert_eq!(field.input_type, TelephoneConstant::Telephone);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -264,7 +260,6 @@ mod tests {
         assert_eq!(field.input_type, UrlConstant::Url);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -306,7 +301,6 @@ mod tests {
         assert_eq!(field.input_type, IpConstant::Ip);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -348,7 +342,6 @@ mod tests {
         assert_eq!(field.input_type, RichConstant::Rich);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
@@ -390,7 +383,6 @@ mod tests {
         assert_eq!(field.input_type, JsonConstant::Json);
         assert_eq!(field.length_type, TextLengthType::None);
         assert!(!field.unique);
-        assert!(!field.write_once);
         assert!(!field.visualize);
         assert_eq!(field.visualize_mode, 0);
     }
