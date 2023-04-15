@@ -17,29 +17,10 @@ pub enum PermissionType {
     Workspace,
 }
 
-// todo: add integer values which the below equate to
-// pub enum FieldPermissionType {
-//     None,
-//     Create,
-//     Read,
-//     Update,
-//     Delete,
-//     Admin,
-//     Execute,
-//     CreateInstance,
-//     ReadInstance,
-//     UpdateInstance,
-//     DeleteInstance,
-//     BulkCreateInstance,
-//     Export,
-//     Lock,
-//     Restrict,
-// }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PermissionMatrix {
     #[serde(rename = "$type")]
-    _type: String,
+    pub _type: String,
     #[serde(flatten)]
     pub permissions: HashMap<String, Permission>,
 }
@@ -47,7 +28,7 @@ pub struct PermissionMatrix {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Access {
     #[serde(rename = "$type")]
-    _type: String,
+    pub _type: String,
     #[serde(flatten)]
     pub permissions: HashMap<String, u16>,
 }
@@ -55,7 +36,7 @@ pub struct Access {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Permission {
     #[serde(rename = "$type")]
-    _type: String,
+    pub _type: String,
     #[serde(rename = "type")]
     pub type_: PermissionType,
     pub id: String,

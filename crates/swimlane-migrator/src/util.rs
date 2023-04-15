@@ -136,6 +136,14 @@ impl SwimlaneMigrator {
         let source_resources = source_resource_getter.await?;
         let destination_resources = destination_resource_getter.await?;
 
+        self._get_resources_to_migrate(source_resources, destination_resources)
+    }
+
+    pub fn _get_resources_to_migrate<T: LooksLike + Clone>(
+        &self,
+        source_resources: Vec<T>,
+        destination_resources: Vec<T>,
+    ) -> Result<Vec<MigrationPlan<T>>, SwimlaneMigratorError> {
         let mut resources_to_migrate = vec![];
 
         for source_resource in source_resources.clone() {

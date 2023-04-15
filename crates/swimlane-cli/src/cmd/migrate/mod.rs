@@ -49,6 +49,7 @@ pub fn dry_run_resource_migrate<T: LooksLike + Display>(plans: Vec<MigrationPlan
                         Difference::UpdatingField { .. } => Color::Yellow,
                         Difference::AddingItem { .. } => Color::Green,
                         Difference::RemovingItem { .. } => Color::Red,
+                        Difference::UpdatingComplexField { .. } => Color::Yellow,
                     };
                     println!("\t{}", format!("{}", difference).color(color));
                 }

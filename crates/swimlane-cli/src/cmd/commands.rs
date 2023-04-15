@@ -77,7 +77,10 @@ pub async fn handle_migrate(
                 let apps = migrator.get_apps_to_migrate().await?;
                 dry_run_resource_migrate(apps);
             }
-            false => migrator.migrate_apps().await?,
+            false => {
+                // todo: prevent migrating apps where the acronym will change
+                migrator.migrate_apps().await?
+            }
         },
         Migrate::App {
             application_name: _,
