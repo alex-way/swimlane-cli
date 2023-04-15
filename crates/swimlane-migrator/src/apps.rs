@@ -1,4 +1,5 @@
 use swimlane::apps::fields::Field;
+use swimlane::apps::layout::Layout;
 use swimlane::apps::Application;
 
 use crate::equality::{Difference, LooksLike};
@@ -235,6 +236,101 @@ impl LooksLike for String {
     }
 }
 
+impl LooksLike for Vec<Field> {
+    fn is_same_resource(&self, _other: &Self) -> bool {
+        unreachable!();
+    }
+
+    fn differences(&self, other: &Self) -> Vec<Difference> {
+        let mut differences = vec![];
+
+        self.iter().for_each(|field| {
+            let other_field = other
+                .iter()
+                .find(|other_field| field.is_same_resource(other_field));
+            if let Some(other_field) = other_field {
+                differences.extend(field.differences(other_field));
+            } else {
+                differences.push(Difference::AddingItem {
+                    field: "fields".to_string(),
+                    item: field.name(),
+                });
+            }
+        });
+
+        other.iter().for_each(|field| {
+            let this_field = self
+                .iter()
+                .find(|this_field| field.is_same_resource(this_field));
+            if this_field.is_none() {
+                differences.push(Difference::RemovingItem {
+                    field: "fields".to_string(),
+                    item: field.name(),
+                });
+            }
+        });
+
+        differences
+    }
+}
+
+impl LooksLike for Layout {
+    fn is_same_resource(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Layout::Field(this_layout), Layout::Field(other_layout)) => {
+                this_layout.field_id == other_layout.field_id
+            }
+            (Layout::Section(this_layout), Layout::Section(other_layout)) => {
+                this_layout.name == other_layout.name
+            }
+            (Layout::Integration(this_layout), Layout::Integration(other_layout)) => {
+                this_layout.name == other_layout.name
+            }
+            (Layout::Widget(this_layout), Layout::Widget(other_layout)) => {
+                this_layout.name == other_layout.name
+            }
+            (Layout::HtmlObject(this_layout), Layout::HtmlObject(other_layout)) => {
+                this_layout.name == other_layout.name
+            }
+            (Layout::Tabs(this_layout), Layout::Tabs(other_layout)) => {
+                this_layout.tabs.iter().all(|tab| {
+                    other_layout
+                        .tabs
+                        .iter()
+                        .any(|other_tab| tab.name == other_tab.name)
+                })
+            }
+            _ => false,
+        }
+    }
+
+    fn differences(&self, other: &Self) -> Vec<Difference> {
+        let mut differences = vec![];
+        // todo: perform a recursive comparison of tabs and sections
+
+        differences
+    }
+}
+
+impl LooksLike for Vec<Layout> {
+    fn is_same_resource(&self, _other: &Self) -> bool {
+        unreachable!();
+    }
+
+    fn differences(&self, _other: &Self) -> Vec<Difference> {
+        let mut differences = vec![];
+
+        // todo: perform an actual search of the entire layout for differences
+        if self.len() != _other.len() {
+            differences.push(Difference::UpdatingComplexField {
+                field: "layout".to_string(),
+            });
+        }
+
+        differences
+    }
+}
+
 impl LooksLike for Application {
     fn differences(&self, other: &Self) -> Vec<Difference> {
         let mut differences = vec![];
@@ -251,65 +347,14 @@ impl LooksLike for Application {
             &other.time_tracking_enabled
         );
 
-        self.fields.iter().for_each(|field| {
-            let other_field = other
-                .fields
-                .iter()
-                .find(|other_field| field.is_same_resource(other_field));
-            if let Some(other_field) = other_field {
-                differences.extend(field.differences(other_field));
-            } else {
-                differences.push(Difference::AddingItem {
-                    field: "fields".to_string(),
-                    item: field.name(),
-                });
-            }
-        });
+        differences.extend(self.fields.differences(&other.fields));
+        push_difference!(differences, "workspaces", &self.workspaces, &other.workspaces, str_vec: true);
 
-        other.fields.iter().for_each(|field| {
-            let this_field = self
-                .fields
-                .iter()
-                .find(|this_field| field.is_same_resource(this_field));
-            if this_field.is_none() {
-                differences.push(Difference::RemovingItem {
-                    field: "fields".to_string(),
-                    item: field.name(),
-                });
-            }
-        });
-
-        self.workspaces.iter().for_each(|workspace| {
-            let this_field = other
-                .workspaces
-                .iter()
-                .find(|this_field| workspace.is_same_resource(this_field));
-            if this_field.is_none() {
-                differences.push(Difference::AddingItem {
-                    field: "workspaces".to_string(),
-                    item: workspace.to_owned(),
-                });
-            }
-        });
-
-        other.workspaces.iter().for_each(|workspace| {
-            let this_field = self
-                .workspaces
-                .iter()
-                .find(|this_field| workspace.is_same_resource(this_field));
-            if this_field.is_none() {
-                differences.push(Difference::RemovingItem {
-                    field: "workspaces".to_string(),
-                    item: workspace.to_owned(),
-                });
-            }
-        });
-
-        // if !self.layout.looks_like(other.layout) {
-        //     differences.push(Difference::UpdatingComplexField {
-        //         field: "layout".to_string(),
-        //     });
-        // }
+        if !self.layout.looks_like(&other.layout) {
+            differences.push(Difference::UpdatingComplexField {
+                field: "layout".to_string(),
+            });
+        }
 
         differences.extend(self.permissions.differences(&other.permissions));
 
@@ -366,6 +411,7 @@ impl SwimlaneMigrator {
             }
         }
         Ok(())
+
         // Create empty applications
         // Migrate fields
         // Migrate Tasks

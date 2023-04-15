@@ -1,5 +1,5 @@
 macro_rules! define_field {
-    ($struct_identifier:ident, $field_type:ty $(, {$($(#[$meta:meta])* pub $field:ident: $ty:ty),* $(,)? })?) => {
+    ($struct_identifier:ident, $field_type:ty $(, {$($(#[$meta:meta])* $vis:vis $field:ident: $ty:ty),* $(,)? })?) => {
         #[derive(Serialize, Deserialize, Debug, Clone)]
         #[serde(deny_unknown_fields)]
         #[serde(rename_all = "camelCase")]
@@ -13,7 +13,7 @@ macro_rules! define_field {
             pub required: bool,
             pub read_only: bool,
             pub field_type: $field_type,
-            $(pub $($field: $ty),*)?
+            $($($vis $field: $ty),*)?
         }
     };
 }

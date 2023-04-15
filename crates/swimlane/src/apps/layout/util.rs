@@ -1,5 +1,5 @@
 macro_rules! define_layout {
-    ($struct_identifier:ident, $layout_type:ident $(, {$($(#[$meta:meta])* pub $field:ident: $ty:ty),* $(,)? })?) => {
+    ($struct_identifier:ident, $layout_type:ident $(, {$($(#[$meta:meta])* $vis:vis $field:ident: $ty:ty),* $(,)? })?) => {
         #[derive(Serialize, Deserialize, Debug, Clone)]
         #[serde(deny_unknown_fields)]
         #[serde(rename_all = "camelCase")]
@@ -15,7 +15,7 @@ macro_rules! define_layout {
             pub size_x: f32,
             #[serde(rename = "sizey")]
             pub size_y: f32,
-            $(pub $($field: $ty),*)?
+            $($($vis $field: $ty),*)?
         }
     };
 }

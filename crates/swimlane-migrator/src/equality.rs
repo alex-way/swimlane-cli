@@ -71,6 +71,33 @@ macro_rules! push_difference {
             }
         }));
     };
+
+    ($differences:expr, $field:literal, $source_vec:expr, $target_vec:expr, str_vec: true) => {
+        $differences.extend($source_vec.iter().filter_map(|item| {
+            let item_exists = $target_vec
+                .iter()
+                .find(|other_item| item.is_same_resource(other_item));
+            match item_exists {
+                Some(_) => None,
+                None => Some(Difference::AddingItem {
+                    field: $field.to_string(),
+                    item: item.clone(),
+                }),
+            }
+        }));
+        $differences.extend($target_vec.iter().filter_map(|item| {
+            let item_exists = $source_vec
+                .iter()
+                .find(|other_item| item.is_same_resource(other_item));
+            match item_exists {
+                Some(_) => None,
+                None => Some(Difference::RemovingItem {
+                    field: $field.to_string(),
+                    item: item.clone(),
+                }),
+            }
+        }));
+    };
 }
 
 impl Display for Difference {

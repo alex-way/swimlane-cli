@@ -27,8 +27,8 @@ define_layout!(SectionLayout, SectionConstant, {
 });
 
 define_layout!(Tab, TabsConstant, {
-    pub children: Vec<Layout>,
     pub name: String,
+    pub children: Vec<Layout>,
     pub active: bool,
 });
 
@@ -37,16 +37,16 @@ define_layout!(TabsLayout, TabConstant, {
 });
 
 define_layout!(HtmlObjectLayout, HtmlObjectConstant, {
-    pub html: String,
     pub name: String,
+    pub html: String,
 });
 
 define_layout!(IntegrationLayout, IntegrationConstant, {
+    pub name: String,
     pub task_id: Option<String>,
     // No idea why but this is an i64, whereas the others are a string...
     pub help_text_type: i64,
     pub help_text: String,
-    pub name: String,
 });
 
 define_layout!(WidgetLayout, WidgetConstant, {
