@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 swimlane = { path = "../swimlane" }
-thiserror = "1.0.40"
+thiserror = "1.0.47"

@@ -92,7 +92,7 @@ pub enum Pip {
     /// Removes a specified package from the Swimlane server
     #[command(arg_required_else_help = true)]
     Remove { package_name: String },
-    /// Lists all installed packages
+    /// Lists all installed packages on the Swimlane server and produces output which is compatible with the requirements.txt format
     Freeze,
 }
 
