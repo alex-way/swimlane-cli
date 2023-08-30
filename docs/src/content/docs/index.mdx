@@ -1,19 +1,16 @@
 ---
-title: Welcome to Starlight
+title: swimlane-cli
 description: Get started building your docs site with Starlight.
 template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: Simple CLI utility for interacting with Swimlane
   image:
-    file: ../../assets/houston.webp
+    file: ../../assets/swimlane.svg
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Show me the docs
+      link: commands/
       icon: right-arrow
       variant: primary
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
@@ -21,16 +18,10 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 ## Next steps
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="View the reference documentation" icon="open-book">
+		View the list of available commands and their usage in the [reference documentation](commands/).
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="Contribute" icon="github">
+		Help add functionality to the CLI by contributing to the [source code](https://github.com/alex-way/swimlane-cli).
 	</Card>
 </CardGrid>

@@ -7,21 +7,31 @@ export default defineConfig({
   	base: '/swimlane-cli',
 	integrations: [
 		starlight({
-			title: 'My Docs',
+			title: 'swimlane CLI',
+			logo: {
+				src: "./src/assets/swimlane.svg",
+			},
 			social: {
-				github: 'https://github.com/alex-way',
+				github: 'https://github.com/alex-way/swimlane-cli',
 			},
 			sidebar: [
 				{
-					label: 'Guides',
+					label: "CLI Commands",
+					autogenerate: { directory: 'commands'},
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', link: '/guides/example/' },
-					],
-				},
-				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
+						{
+							label: "download-python-tasks",
+							link: "/commands/download-python-tasks/"
+						},
+						{
+							label: "migrate",
+							link: "/commands/migrate/"
+						},
+						{
+							label: "pip",
+							link: "/commands/pip/"
+						}
+					]
 				},
 			],
 		}),
