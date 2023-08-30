@@ -305,7 +305,7 @@ impl LooksLike for Layout {
     }
 
     fn differences(&self, other: &Self) -> Vec<Difference> {
-        let mut differences = vec![];
+        let differences = vec![];
         // todo: perform a recursive comparison of tabs and sections
 
         differences

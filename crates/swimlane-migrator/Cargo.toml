@@ -4,5 +4,5 @@ version = "0.0.0"
 edition = "2021"
 
 [dependencies]
-swimlane = { path = "../swimlane" }
+swimlane = "0.1.0"
 thiserror = "1.0.47"

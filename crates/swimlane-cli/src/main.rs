@@ -17,11 +17,11 @@ pub struct Cli {
     #[command(subcommand)]
     command: Command,
 
-    #[arg(long, env = "SWIMLANE_CLI__SOURCE_SWIMLANE_URL")]
-    source_swimlane_url: String,
+    #[arg(long, env = "SWIMLANE_CLI__URL")]
+    url: String,
 
-    #[arg(long, env = "SWIMLANE_CLI__SOURCE_SWIMLANE_PAT")]
-    source_swimlane_pat: String,
+    #[arg(long, env = "SWIMLANE_CLI__PAT")]
+    pat: String,
 }
 
 #[derive(Debug, Subcommand)]
@@ -100,7 +100,7 @@ pub enum Pip {
 async fn main() -> Result<(), SwimlaneCliError> {
     let args = Cli::parse();
 
-    let swimlane_client = SwimlaneClient::new(args.source_swimlane_url, args.source_swimlane_pat);
+    let swimlane_client = SwimlaneClient::new(args.url, args.pat);
 
     match args.command {
         Command::DownloadPythonTasks { path } => {
