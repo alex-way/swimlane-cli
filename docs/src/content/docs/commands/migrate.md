@@ -5,13 +5,13 @@ description: Reference documentation for the swimlane-cli migrate command.
 
 ```bash
 swimlane-cli migrate users
-swimlane-cli migrate user <username>
+swimlane-cli migrate user USERNAME
 swimlane-cli migrate groups
-swimlane-cli migrate group <group_name>
+swimlane-cli migrate group GROUP_NAME
 swimlane-cli migrate roles
-swimlane-cli migrate role <role_name>
+swimlane-cli migrate role ROLE_NAME
 swimlane-cli migrate apps
-swimlane-cli migrate app <username>
+swimlane-cli migrate app APP_NAME
 swimlane-cli migrate all
 
 ```

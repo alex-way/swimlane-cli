@@ -4,9 +4,9 @@ description: Reference documentation for the swimlane-cli pip command.
 ---
 
 ```bash
-swimlane-cli pip install <package>
-swimlane-cli pip install -r <requirements file>
-swimlane-cli pip remove <package>
+swimlane-cli pip install PACKAGE
+swimlane-cli pip install -r REQUIREMENTS_FILE
+swimlane-cli pip remove PACKAGE
 swimlane-cli pip freeze
 swimlane-cli pip help
 ```
