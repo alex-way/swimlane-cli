@@ -4,7 +4,7 @@ description: Reference documentation for the swimlane-cli download-python-tasks 
 ---
 
 ```bash
-swimlane-cli download-python-tasks [<directory>]
+swimlane-cli download-python-tasks <path>
 swimlane-cli download-python-tasks help
 ```
 
