@@ -42,6 +42,10 @@ Sample Output:
 
 Specifies the application to download tasks from. If not specified, all tasks will be downloaded.
 
+### `-p, --path`
+
+Specifies the path to save the tasks to. If not specified, the tasks will be saved to the current working directory.
+
 ### `-h, --help`
 
 Show the help message
