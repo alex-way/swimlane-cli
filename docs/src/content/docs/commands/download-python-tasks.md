@@ -36,13 +36,11 @@ Sample Output:
 
 ## Options
 
-| Option       | Description           |
-| :----------- | :-------------------- |
-| `-h, --help` | Show the help message |
+### `-h, --help`
+
+Show the help message
 
 ## Caveats
-
-The following caveats apply to this command:
 
 - Non-python tasks will not be downloaded.
 - Forked tasks will not be downloaded.

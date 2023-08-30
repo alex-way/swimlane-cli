@@ -22,10 +22,22 @@ The `swimlane-cli migrate` command is used to migrate resources from one Swimlan
 
 ## Options
 
-| Option                       | Description                                                                                                                                    |
-| :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--destination-swimlane-url` | The URL of the Swimlane instance to migrate to. Can also be configured with the `SWIMLANE_CLI__DESTINATION_SWIMLANE_URL` environment variable. |
-| `--destination-swimlane-pat` | The Access Token for the destination instance. Can also be configured with the `SWIMLANE_CLI__DESTINATION_SWIMLANE_PAT` environment variable.  |
-| `--dry-run`                  | Whether or not to perform a dry run of the migration.                                                                                          |
-| `--auto-approve`             | Automatically approve the migration without prompting.                                                                                         |
-| `-h, --help`                 | Show the help message                                                                                                                          |
+### `--destination-swimlane-url`
+
+The URL of the Swimlane instance to migrate to. Can also be configured with the `SWIMLANE_CLI__DESTINATION_SWIMLANE_URL` environment variable.
+
+### `--destination-swimlane-pat`
+
+The Access Token for the destination instance. Can also be configured with the `SWIMLANE_CLI__DESTINATION_SWIMLANE_PAT` environment variable.
+
+### `--dry-run`
+
+Whether or not to perform a dry run of the migration.
+
+### `--auto-approve`
+
+Automatically approve the migration without prompting.
+
+### `-h, --help`
+
+Show the help message

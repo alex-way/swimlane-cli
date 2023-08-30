@@ -17,6 +17,6 @@ The pip command has a number of subcommands that can be used to interact with th
 
 ## Options
 
-| Option       | Description           |
-| :----------- | :-------------------- |
-| `-h, --help` | Show the help message |
+### `-h, --help`
+
+Show the help message
