@@ -4,7 +4,7 @@ version = "0.0.3"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.3.22", features = ["derive", "env"] }
+clap = { version = "4.3.22", features = ["derive", "env", "string"] }
 tokio = { version = "1.32.0", features = ["rt-multi-thread", "fs", "macros"] }
 swimlane = "0.1.0"
 swimlane-migrator = { path = "../swimlane-migrator" }

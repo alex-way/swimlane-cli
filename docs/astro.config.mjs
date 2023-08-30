@@ -20,8 +20,8 @@ export default defineConfig({
 					autogenerate: { directory: 'commands'},
 					items: [
 						{
-							label: "download-python-tasks",
-							link: "/commands/download-python-tasks/"
+							label: "task",
+							link: "/commands/task/"
 						},
 						{
 							label: "migrate",

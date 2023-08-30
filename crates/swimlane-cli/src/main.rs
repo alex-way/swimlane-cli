@@ -4,8 +4,9 @@ pub mod util;
 
 use clap::{arg, Parser, Subcommand};
 use cmd::commands::{freeze_python_packages, handle_migrate, remove_python_package};
-use cmd::task::download_python_tasks;
+use cmd::task::save_python_tasks;
 use error::SwimlaneCliError;
+use std::env;
 use std::path::PathBuf;
 use swimlane::SwimlaneClient;
 use util::parse_package_version;
@@ -26,11 +27,11 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Downloads all custom python tasks to a specified path
+    /// Subcommands for interacting with tasks
     #[command(arg_required_else_help = true)]
-    DownloadPythonTasks {
-        /// Where the tasks will be downloaded to
-        path: PathBuf,
+    Task {
+        #[clap(subcommand)]
+        subcommand: Task,
     },
     /// Subcommands for interacting with python packages
     Pip {
@@ -96,6 +97,20 @@ pub enum Pip {
     Freeze,
 }
 
+#[derive(Debug, Subcommand)]
+pub enum Task {
+    /// Downloads all custom python tasks to a specified path
+    #[command(arg_required_else_help = true)]
+    Save {
+        /// Where the tasks will be downloaded to. Defaults to .
+        #[arg(short, long, default_value=env::current_dir().unwrap().into_os_string())]
+        path: PathBuf,
+        /// Application to download tasks for
+        #[arg(short, long)]
+        app: Option<String>,
+    },
+}
+
 #[tokio::main]
 async fn main() -> Result<(), SwimlaneCliError> {
     let args = Cli::parse();
@@ -103,9 +118,12 @@ async fn main() -> Result<(), SwimlaneCliError> {
     let swimlane_client = SwimlaneClient::new(args.url, args.pat);
 
     match args.command {
-        Command::DownloadPythonTasks { path } => {
-            download_python_tasks(&swimlane_client, &path).await?
-        }
+        Command::Task { subcommand } => match subcommand {
+            Task::Save { path, app } => {
+                println!("Downloading tasks to: '{}'", path.display());
+                save_python_tasks(&swimlane_client, &path, &app).await?
+            }
+        },
         Command::Pip { subcommand } => match subcommand {
             Pip::Install {
                 requirements_file,

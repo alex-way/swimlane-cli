@@ -83,10 +83,11 @@ async fn save_task(task: &Task, path: &impl AsRef<Path>) -> io::Result<()> {
     }
 }
 
-/// Downloads all python tasks to the specified path in the format '{application_name}/{task_name}.py'
-pub async fn download_python_tasks(
+/// Saves all python tasks to the specified path in the format '{application_name}/{task_name}.py'
+pub async fn save_python_tasks(
     swimlane_client: &SwimlaneClient,
     path: &impl AsRef<Path>,
+    app: &Option<String>,
 ) -> Result<(), SwimlaneCliError> {
     // Create the path if it doesnt exist
     if !path.as_ref().exists() {
@@ -94,14 +95,22 @@ pub async fn download_python_tasks(
             .unwrap_or_else(|_| panic!("Could not create path: '{}'", &path.as_ref().display()));
     }
 
-    let applications = swimlane_client
+    let mut applications = swimlane_client
         .get_applications_light()
         .await
         .expect("Could not get applications");
 
+    // If an application is specified, filter the applications to only include that application
+    if let Some(app) = app {
+        applications = applications
+            .into_iter()
+            .filter(|a| a.name == *app)
+            .collect::<Vec<_>>();
+    }
+
     let mut handles = vec![];
 
-    for application in applications {
+    for application in applications.clone() {
         let sw = swimlane_client.clone();
         let path = path.as_ref().to_path_buf();
         let handle = tokio::spawn(async move {
@@ -117,13 +126,19 @@ pub async fn download_python_tasks(
         handles.push(handle);
     }
 
-    let common_path = path.as_ref().to_path_buf();
-    let sw = swimlane_client.clone();
-    handles.push(tokio::spawn(async move {
-        download_common_tasks(&sw, &common_path)
-            .await
-            .unwrap_or_else(|_| panic!("Could not download common tasks"));
-    }));
+    // if common in applications
+
+    if app.is_none() || app == &Some("common".to_string()) {
+        let sw = swimlane_client.clone();
+        let path = path.as_ref().to_path_buf();
+        let handle = tokio::spawn(async move {
+            download_common_tasks(&sw, &path)
+                .await
+                .unwrap_or_else(|_| panic!("Could not download common tasks"));
+        });
+        handles.push(handle);
+    }
+
     for handle in handles {
         handle.await.unwrap();
     }
