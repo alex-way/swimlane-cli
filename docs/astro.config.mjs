@@ -21,53 +21,71 @@ export default defineConfig({
 					items: [
 						{
 							label: "task",
-							link: "/commands/task/"
+							items: [
+								{
+									label: "task save",
+									link: "/commands/task/save/"
+								}
+							]
 						},
 						{
 							label: "migrate",
 							items: [
 								{
-									label: "all",
+									label: "migrate",
 									link: "/commands/migrate/"
 								},
 								{
-									label: "user",
+									label: "migrate user",
 									link: "/commands/migrate/user/"
 								},
 								{
-									label: "users",
+									label: "migrate users",
 									link: "/commands/migrate/users/"
 								},
 								{
-									label: "group",
+									label: "migrate group",
 									link: "/commands/migrate/group/"
 								},
 								{
-									label: "groups",
+									label: "migrate groups",
 									link: "/commands/migrate/groups/"
 								},
 								{
-									label: "role",
+									label: "migrate role",
 									link: "/commands/migrate/role/"
 								},
 								{
-									label: "roles",
+									label: "migrate roles",
 									link: "/commands/migrate/roles/"
 								},
 								{
-									label: "app",
+									label: "migrate app",
 									link: "/commands/migrate/app/"
 								}
 								,
 								{
-									label: "apps",
+									label: "migrate apps",
 									link: "/commands/migrate/apps/"
 								}
 							]
 						},
 						{
 							label: "pip",
-							link: "/commands/pip/"
+							items: [
+								{
+									label: "pip install",
+									link: "/commands/pip/install/"
+								},
+								{
+									label: "pip remove",
+									link: "/commands/pip/remove/"
+								},
+								{
+									label: "pip freeze",
+									link: "/commands/pip/freeze/"
+								}
+							]
 						}
 					]
 				},
