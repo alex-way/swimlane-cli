@@ -42,7 +42,9 @@ impl SwimlaneMigrator {
 
 #[derive(Error, Debug)]
 pub enum SwimlaneMigratorNewError {
-    #[error("The source and destination Swimlane servers are the same. Please specify different servers.")]
+    #[error(
+        "The source and target Swimlane servers are the same. Please specify different servers."
+    )]
     SourceAndDestinationAreIdentical,
 }
 
@@ -64,9 +66,9 @@ pub enum MigrationPlan<T: LooksLike> {
     },
     Update {
         source_resource: T,
-        destination_resource: T,
+        target_resource: T,
     },
     Delete {
-        destination_resource: T,
+        target_resource: T,
     },
 }

@@ -116,9 +116,9 @@ impl SwimlaneMigrator {
         &self,
     ) -> Result<Vec<MigrationPlan<Role>>, SwimlaneMigratorError> {
         let source_roles_future = self.from.get_roles();
-        let destination_roles_future = self.to.get_roles();
+        let target_roles_future = self.to.get_roles();
 
-        self.get_resources_to_migrate(source_roles_future, destination_roles_future)
+        self.get_resources_to_migrate(source_roles_future, target_roles_future)
             .await
     }
 

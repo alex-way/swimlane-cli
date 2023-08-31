@@ -17,14 +17,8 @@ pub fn dry_run_resource_migrate<T: LooksLike + Display>(plans: Vec<MigrationPlan
         }
 
         plans.iter().for_each(|plan| {
-            if let MigrationPlan::Delete {
-                destination_resource,
-            } = plan
-            {
-                println!(
-                    "{}",
-                    format!("{} will be deleted", destination_resource).red()
-                )
+            if let MigrationPlan::Delete { target_resource } = plan {
+                println!("{}", format!("{} will be deleted", target_resource).red())
             }
         });
 
@@ -37,14 +31,14 @@ pub fn dry_run_resource_migrate<T: LooksLike + Display>(plans: Vec<MigrationPlan
         plans.iter().for_each(|plan| {
             if let MigrationPlan::Update {
                 source_resource,
-                destination_resource,
+                target_resource,
             } = plan
             {
                 println!(
                     "{}",
                     format!("{} will be updated", source_resource).yellow()
                 );
-                for difference in source_resource.differences(destination_resource) {
+                for difference in source_resource.differences(target_resource) {
                     let color = match difference {
                         Difference::UpdatingField { .. } => Color::Yellow,
                         Difference::AddingItem { .. } => Color::Green,

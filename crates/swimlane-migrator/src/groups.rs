@@ -31,9 +31,9 @@ impl SwimlaneMigrator {
         &self,
     ) -> Result<Vec<MigrationPlan<Group>>, SwimlaneMigratorError> {
         let source_groups_future = self.from.get_groups();
-        let destination_groups_future = self.to.get_groups();
+        let target_groups_future = self.to.get_groups();
 
-        self.get_resources_to_migrate(source_groups_future, destination_groups_future)
+        self.get_resources_to_migrate(source_groups_future, target_groups_future)
             .await
     }
 
@@ -131,21 +131,21 @@ impl SwimlaneMigrator {
         for group in &groups_to_migrate {
             match group {
                 MigrationPlan::Create { source_resource } => {
-                    // replace the id in each of the nested groups with the id from the destination system
+                    // replace the id in each of the nested groups with the id from the target system
                     // let mut groups = vec![];
-                    // replace the id in each of the nested roles with the id from the destination system
+                    // replace the id in each of the nested roles with the id from the target system
                     // let mut roles = vec![];
-                    // replace the id in each of the nested users with the id from the destination system
+                    // replace the id in each of the nested users with the id from the target system
                     // let mut users = vec![];
                     println!("  {} (create)", source_resource.name);
                 }
                 MigrationPlan::Update {
                     source_resource,
-                    destination_resource,
+                    target_resource,
                 } => {
                     println!(
                         "  {} (update) - {}",
-                        source_resource.name, destination_resource.name
+                        source_resource.name, target_resource.name
                     );
                 }
                 _ => {}
@@ -155,8 +155,8 @@ impl SwimlaneMigrator {
         Ok(())
     }
 
-    /// Adapts a group from a source system to a destination system
-    /// This is used to replace the ids of nested groups, roles, and users with the ids from the destination system
+    /// Adapts a group from a source system to a target system
+    /// This is used to replace the ids of nested groups, roles, and users with the ids from the target system
     /// This is necessary because the ids of these resources are not guaranteed to be the same between systems
     ///
     /// Example:
@@ -180,9 +180,9 @@ impl SwimlaneMigrator {
     ///
     /// let source_swimlane = SwimlaneClient::new("https://source.swimlane.com".to_string(), "source_api_key".to_string());
     ///
-    /// let destination_swimlane = SwimlaneClient::new("https://destination.swimlane.com".to_string(), "destination_api_key".to_string());
+    /// let target_swimlane = SwimlaneClient::new("https://target.swimlane.com".to_string(), "target_api_key".to_string());
     ///
-    /// let migrator = SwimlaneMigrator::new(source_swimlane, destination_swimlane, false).expect("Failed to create migrator");
+    /// let migrator = SwimlaneMigrator::new(source_swimlane, target_swimlane, false).expect("Failed to create migrator");
     /// migrator.adapt_group(&mut group, &group_id_hashmap, &user_id_hashmap, &role_id_hashmap);
     ///
     /// assert_eq!(group.id, "9012");
@@ -227,11 +227,11 @@ mod tests {
     #[test]
     fn test_name_inequality_triggers_difference() {
         let mut source_group = Group::default();
-        let mut destination_group = Group::default();
+        let mut target_group = Group::default();
         source_group.name = "Group 1".to_string();
-        destination_group.name = "Group 2".to_string();
+        target_group.name = "Group 2".to_string();
 
-        let differences = source_group.differences(&destination_group);
+        let differences = source_group.differences(&target_group);
         assert_eq!(differences.len(), 1);
         assert_eq!(
             differences[0],
@@ -246,11 +246,11 @@ mod tests {
     #[test]
     fn test_disabled_inequality_triggers_difference() {
         let mut source_group = Group::default();
-        let mut destination_group = Group::default();
+        let mut target_group = Group::default();
         source_group.disabled = true;
-        destination_group.disabled = false;
+        target_group.disabled = false;
 
-        let differences = source_group.differences(&destination_group);
+        let differences = source_group.differences(&target_group);
         assert_eq!(differences.len(), 1);
         assert_eq!(
             differences[0],
@@ -265,11 +265,11 @@ mod tests {
     #[test]
     fn test_description_inequality_triggers_difference() {
         let mut source_group = Group::default();
-        let mut destination_group = Group::default();
+        let mut target_group = Group::default();
         source_group.description = Some("Description 1".to_string());
-        destination_group.description = Some("Description 2".to_string());
+        target_group.description = Some("Description 2".to_string());
 
-        let differences = source_group.differences(&destination_group);
+        let differences = source_group.differences(&target_group);
         assert_eq!(differences.len(), 1);
         assert_eq!(
             differences[0],
@@ -284,14 +284,14 @@ mod tests {
     #[test]
     fn test_users_inequality_triggers_difference() {
         let mut source_group = Group::default();
-        let destination_group = Group::default();
+        let target_group = Group::default();
         source_group.users = vec![BaseEntity {
             id: "1234".to_string(),
             name: "User 1".to_string(),
             disabled: false,
         }];
 
-        let differences = source_group.differences(&destination_group);
+        let differences = source_group.differences(&target_group);
         assert_eq!(differences.len(), 1);
         assert_eq!(
             differences[0],
@@ -305,14 +305,14 @@ mod tests {
     #[test]
     fn test_roles_inequality_triggers_difference() {
         let mut source_group = Group::default();
-        let destination_group = Group::default();
+        let target_group = Group::default();
         source_group.roles = vec![BaseEntity {
             id: "1234".to_string(),
             name: "Role 1".to_string(),
             disabled: false,
         }];
 
-        let differences = source_group.differences(&destination_group);
+        let differences = source_group.differences(&target_group);
         assert_eq!(differences.len(), 1);
         assert_eq!(
             differences[0],

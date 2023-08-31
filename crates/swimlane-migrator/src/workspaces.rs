@@ -28,9 +28,9 @@ impl SwimlaneMigrator {
     ) -> Result<Vec<MigrationPlan<Workspace>>, SwimlaneMigratorError> {
         println!("Getting workspaces to migrate");
         // let source_workspace_future = self.from.get_roles();
-        // let destination_workspace_future = self.to.get_roles();
+        // let target_workspace_future = self.to.get_roles();
 
-        // self.get_resources_to_migrate(source_roles_future, destination_roles_future)
+        // self.get_resources_to_migrate(source_roles_future, target_roles_future)
         //     .await
         todo!()
     }

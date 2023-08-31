@@ -25,7 +25,45 @@ export default defineConfig({
 						},
 						{
 							label: "migrate",
-							link: "/commands/migrate/"
+							items: [
+								{
+									label: "all",
+									link: "/commands/migrate/"
+								},
+								{
+									label: "user",
+									link: "/commands/migrate/user/"
+								},
+								{
+									label: "users",
+									link: "/commands/migrate/users/"
+								},
+								{
+									label: "group",
+									link: "/commands/migrate/group/"
+								},
+								{
+									label: "groups",
+									link: "/commands/migrate/groups/"
+								},
+								{
+									label: "role",
+									link: "/commands/migrate/role/"
+								},
+								{
+									label: "roles",
+									link: "/commands/migrate/roles/"
+								},
+								{
+									label: "app",
+									link: "/commands/migrate/app/"
+								}
+								,
+								{
+									label: "apps",
+									link: "/commands/migrate/apps/"
+								}
+							]
 						},
 						{
 							label: "pip",

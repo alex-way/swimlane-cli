@@ -44,9 +44,9 @@ impl SwimlaneMigrator {
         &self,
     ) -> Result<Vec<MigrationPlan<User>>, SwimlaneMigratorError> {
         let source_users_future = self.from.get_users();
-        let destination_users_future = self.to.get_users();
+        let target_users_future = self.to.get_users();
 
-        self.get_resources_to_migrate(source_users_future, destination_users_future)
+        self.get_resources_to_migrate(source_users_future, target_users_future)
             .await
     }
 
@@ -65,11 +65,8 @@ impl SwimlaneMigrator {
 
         // Delete users first, in order to ensure enough free licenses.
         for user in &users_to_migrate {
-            if let MigrationPlan::Delete {
-                destination_resource,
-            } = user
-            {
-                self.to.delete_user(&destination_resource.id).await?;
+            if let MigrationPlan::Delete { target_resource } = user {
+                self.to.delete_user(&target_resource.id).await?;
             }
         }
 
@@ -84,11 +81,11 @@ impl SwimlaneMigrator {
                 }
                 MigrationPlan::Update {
                     source_resource,
-                    destination_resource,
+                    target_resource,
                 } => {
                     let mut adapted_user = source_resource.clone();
                     self.adapt_user(&mut adapted_user, &group_id_hashmap, &role_id_hashmap);
-                    adapted_user.id = destination_resource.id.clone();
+                    adapted_user.id = target_resource.id.clone();
                     self.to.update_user(&adapted_user).await?;
                 }
                 _ => {}

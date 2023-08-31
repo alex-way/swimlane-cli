@@ -38,14 +38,14 @@ pub enum Command {
         #[clap(subcommand)]
         subcommand: Pip,
     },
-    /// Migrates data from the source Swimlane server to the destination Swimlane server
+    /// Migrates data from the source Swimlane server to the target Swimlane server
     Migrate {
         #[clap(subcommand)]
-        migration_type: Migrate,
-        #[arg(long, env = "SWIMLANE_CLI__DESTINATION_SWIMLANE_URL")]
-        destination_swimlane_url: String,
-        #[arg(long, env = "SWIMLANE_CLI__DESTINATION_SWIMLANE_PAT")]
-        destination_swimlane_pat: String,
+        migration_type: Option<Migrate>,
+        #[arg(long, env = "SWIMLANE_CLI__TARGET_URL")]
+        target_url: String,
+        #[arg(long, env = "SWIMLANE_CLI__TARGET_URL")]
+        target_pat: String,
         #[arg(long)]
         dry_run: bool,
         #[arg(long)]
@@ -55,28 +55,28 @@ pub enum Command {
 
 #[derive(Debug, Subcommand)]
 pub enum Migrate {
-    /// Migrates all users from the source Swimlane server to the destination Swimlane server
+    /// Migrates all users from the source Swimlane server to the target Swimlane server
     Users,
-    /// Migrates the specified user from the source Swimlane server to the destination Swimlane server
+    /// Migrates the specified user from the source Swimlane server to the target Swimlane server
     #[command(arg_required_else_help = true)]
     User { user_id: String },
-    /// Migrates all groups from the source Swimlane server to the destination Swimlane server
+    /// Migrates all groups from the source Swimlane server to the target Swimlane server
     Groups,
-    /// Migrates the specified group from the source Swimlane server to the destination Swimlane server
+    /// Migrates the specified group from the source Swimlane server to the target Swimlane server
     #[command(arg_required_else_help = true)]
     Group { group_id: String },
-    /// Migrates all roles from the source Swimlane server to the destination Swimlane server
+    /// Migrates all roles from the source Swimlane server to the target Swimlane server
     Roles,
-    /// Migrates the specified role from the source Swimlane server to the destination Swimlane server
+    /// Migrates the specified role from the source Swimlane server to the target Swimlane server
     #[command(arg_required_else_help = true)]
     Role { role_id: String },
-    /// Migrates all applications from the source Swimlane server to the destination Swimlane server
+    /// Migrates all applications from the source Swimlane server to the target Swimlane server
     Apps,
-    /// Migrates the specified application from the source Swimlane server to the destination Swimlane server
+    /// Migrates the specified application from the source Swimlane server to the target Swimlane server
     #[command(arg_required_else_help = true)]
     App { application_name: String },
 
-    /// Migrates all possible content from the source Swimlane server to the destination Swimlane server
+    /// Migrates all possible content from the source Swimlane server to the target Swimlane server
     All,
 }
 
@@ -150,16 +150,18 @@ async fn main() -> Result<(), SwimlaneCliError> {
         },
         Command::Migrate {
             migration_type,
-            destination_swimlane_url,
-            destination_swimlane_pat,
+            target_url,
+            target_pat,
             dry_run,
             auto_approve: _,
         } => {
-            let destination_swimlane_client =
-                SwimlaneClient::new(destination_swimlane_url, destination_swimlane_pat);
+            let target_swimlane_client = SwimlaneClient::new(target_url, target_pat);
+
+            let migration_type = migration_type.unwrap_or(Migrate::All);
+
             handle_migrate(
                 swimlane_client,
-                destination_swimlane_client,
+                target_swimlane_client,
                 migration_type,
                 dry_run,
             )

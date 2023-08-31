@@ -371,15 +371,15 @@ impl SwimlaneMigrator {
         &self,
     ) -> Result<Vec<MigrationPlan<Application>>, SwimlaneMigratorError> {
         let source_apps_future = self.from.get_applications();
-        let destination_apps_future = self.to.get_applications();
+        let target_apps_future = self.to.get_applications();
         let source_workspace_hashmap = self.from_normaliser.get_workspace_hashmap();
-        let destination_workspace_hashmap = self.to_normaliser.get_workspace_hashmap();
+        let target_workspace_hashmap = self.to_normaliser.get_workspace_hashmap();
 
         // normalise the apps
         let source_apps = source_apps_future.await?;
-        let destination_apps = destination_apps_future.await?;
+        let target_apps = target_apps_future.await?;
         let source_workspace_hashmap = source_workspace_hashmap.await;
-        let destination_workspace_hashmap = destination_workspace_hashmap.await;
+        let target_workspace_hashmap = target_workspace_hashmap.await;
 
         let source_apps = source_apps
             .into_iter()
@@ -389,15 +389,15 @@ impl SwimlaneMigrator {
             })
             .collect::<Vec<Application>>();
 
-        let destination_apps = destination_apps
+        let target_apps = target_apps
             .into_iter()
             .map(|app| {
                 self.from_normaliser
-                    .normalise_application(&app, &destination_workspace_hashmap)
+                    .normalise_application(&app, &target_workspace_hashmap)
             })
             .collect::<Vec<Application>>();
 
-        self._get_resources_to_migrate(source_apps, destination_apps)
+        self._get_resources_to_migrate(source_apps, target_apps)
     }
 
     pub async fn migrate_apps(&self) -> Result<(), SwimlaneMigratorError> {

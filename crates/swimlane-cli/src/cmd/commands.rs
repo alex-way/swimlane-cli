@@ -26,16 +26,16 @@ pub async fn freeze_python_packages(
 
 pub async fn handle_migrate(
     source: SwimlaneClient,
-    destination: SwimlaneClient,
+    target: SwimlaneClient,
     migration_type: Migrate,
     dry_run: bool,
 ) -> Result<(), SwimlaneCliError> {
     println!(
         "Migrating from {} to {}",
-        &source.base_url, &destination.base_url
+        &source.base_url, &target.base_url
     );
 
-    let migrator = SwimlaneMigrator::new(source, destination, dry_run)?;
+    let migrator = SwimlaneMigrator::new(source, target, dry_run)?;
 
     if dry_run {
         println!("Dry run enabled, no changes will be made");
