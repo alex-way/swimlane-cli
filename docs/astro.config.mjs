@@ -4,7 +4,7 @@ import starlight from '@astrojs/starlight';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://alex-way.github.io',
-  	base: '/swimlane-cli',
+	base: '/swimlane-cli/',
 	integrations: [
 		starlight({
 			title: 'swimlane CLI',
@@ -17,7 +17,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: "CLI Commands",
-					autogenerate: { directory: 'commands'},
+					autogenerate: { directory: 'commands' },
 					items: [
 						{
 							label: "task",
@@ -95,4 +95,5 @@ export default defineConfig({
 
 	// Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
 	image: { service: { entrypoint: 'astro/assets/services/sharp' } },
+
 });
